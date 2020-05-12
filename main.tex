@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[dvipsnames]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[left=3cm, right=3cm, top=2cm]{geometry}
 \title{Brass}
@@ -16,6 +16,7 @@
 \def\SBcomment[#1]{\textcolor{red}{#1}}
 \def\SWcomment[#1]{\textcolor{blue}{#1}}
 \def\SScomment[#1]{\textcolor{green}{#1}}
+\def\type[#1]{\textcolor{purple}{#1}}
 
 \def\dxp{\delta_{x+}}
 \def\dxm{\delta_{x-}}
@@ -29,9 +30,10 @@
 \def\Psinm{\Psi_l^{n-1}}
 \def\Psiln{\Psi_l^n}
 \def\Sbar{\bar S_l}
-
+\def\z{z^{-1}}
+\def\muTT{\mu_{tt}}
+\def\dtd{\delta_{t\cdot}}
 \begin{document}
-
 \maketitle
 
 \section{Introduction}
@@ -40,10 +42,43 @@ This document shows the work done and documentation on the brass part of the PhD
 Main references are \cite{Bilbao2009} and \cite{Bilbao2018}.
 
 \section{Variable cross-section}
+\subsection{Preamble}
+Schemes with variable cross-section behave best (have the greatest band-width) when stretched coordinates are used. Following Section 5.3 of \cite{Bilbao2009}, we can devine a new coordinate $\alpha = \alpha(x)$ where the map $x\rightarrow\alpha$ is ``smooth and one-to-one" (i.e. if $x_1\leq x_2$ then $\alpha_1\leq \alpha_2$). Partial derivatives are as follows:
+\begin{equation}
+   \partial_x \quad\longrightarrow\quad \alpha'\partial_\alpha \qquad \text{and} \qquad \partial_x^2\quad \longrightarrow\quad\alpha'\partial_\alpha\left(\alpha'\partial_\alpha\right),
+\end{equation}
+with $\alpha'= \partial \alpha/\partial x$ which describes the rate-of-change of grid spacing with respect to the original grid spacing. In discrete time, a centered approximation for the second spatial derivative is
+\begin{equation}\label{eq:secondOrderVarying}
+    \delta_{xx} \quad \longrightarrow \quad \alpha'\delta_{\alpha+}\big((\mu_{\alpha-}\alpha')\delta_{\alpha-}\big).
+\end{equation}
+This operator applied to a grid function $u_l^n$ and expanded yields
+\begin{equation}
+    \frac{\alpha'_l}{2h^2} \Big((\alpha'_{l+1}+\alpha'_l)u_{l+1}^n + (\alpha'_l+\alpha'_{l-1})u_{l-1}^n - (\alpha'_{l+1}+2\alpha'_l+\alpha'_{l-1})u_l^n\Big),
+\end{equation}
+or
+\begin{equation}
+    \frac{\alpha'_l}{h^2}\Big((\mu_{\alpha+}\alpha_l')u_{l+1}^n+(\mu_{\alpha-}\alpha_l')u_{l-1}^n-2(\mu_{\alpha\alpha}\alpha'_l)u_l^n\Big)
+\end{equation}
+\subsubsection{String of varying cross-section}
+The PDE of an ideal string with a varying cross-section is
+\begin{equation}\label{eq:idealVarying}
+    \epsilon^2\partial_t^2u=c_0^2\partial^2_xu,
+\end{equation}
+where $c_0^2 = T_0/\rho A_0$ is the reference wave-speed (in m/s) and $\epsilon = \epsilon(x)$ is a spatially varying factor (in ?unit?). Using Eq. \eqref{eq:secondOrderVarying} where $ \alpha'\rightarrow\epsilon$ we can rewrite Eq. \eqref{eq:idealVarying} to
+\begin{align}
+    \epsilon^2\partial_t^2u&=c_0^2\epsilon\partial_\alpha(\epsilon\partial_\alpha u),\\
+    \epsilon\partial_t^2u&=c_0^2\partial_\alpha(\epsilon\partial_\alpha u),
+\end{align}
+
+% The obvious finite difference scheme for this would be
+% \begin{equation}
+%     \epsilon^2(x)\delta_{tt}u=c_0^2\delta_{xx}u.
+% \end{equation}
+% U
 \subsection{Webster's equation}
 The first main difference between the 1D brass PDE and the 1D wave equation is the possibility of having a variable cross-section. Following Section 19.3 from \cite{Bilbao2018}, the PDE for a 1D (axially symmetric) acoustic tube with variable cross-section is (also known as \textit{Webster}'s equation)
 \begin{equation}\label{eq:webstersPDE}
-    S\partial_t^2\Psi = c^2\partial_xS(\partial_x\Psi),
+    S\partial_t^2\Psi = c^2\partial_x(S\partial_x\Psi),
 \end{equation}
 with \textit{acoustic potential} $\Psi = \Psi(x,t)$ (m$^2$/s), $S = S(x)$ is the cross sectional area (m$^2$) and wave speed $c$ (m/s).
 
@@ -60,24 +95,540 @@ The right side of the equation in \eqref{eq:discWebster} contains an operator ap
 \begin{equation}
     \dxp (u_lw_l) = (\dxp u_l)(\mup{w_l}) + (\mup u_l)(\dxp w_l).
 \end{equation}
-In the case of \eqref{eq:discWebster}, $u_l \triangleq \Sm$ and $w_l \triangleq \dxm\Psiln$. Expanding (retaining the notation for $\Sbar$) and solving for $\Psinp$ yields
+In the case of \eqref{eq:discWebster}, $u_l \triangleq \Sm$ and $w_l \triangleq \dxm\Psiln$. Expanding (retaining the notation for $\Sbar$) and solving for $\Psinp$ yields (Appendix \ref{app:webstersUpdateEq})
 \begin{equation}
-    \begin{aligned}
-        \frac{\Sbar}{k^2}(\Psinp - 2\Psiln+\Psinm) &= c^2\left((\dxp \Sm)(\mup \dxm \Psiln) + (\mup \Sm)(\dxp \dxm \Psiln)\right)\\
-        \Psinp - 2\Psiln+\Psinm &= \frac{c^2k^2}{\Sbar}\bigg(\frac{1}{h}(\Sp - \Sm)\frac{1}{2h}\overbrace{(\Psilp -\Psilm)}^{\mup\dxm\Psiln = \delta_{x\cdot}\Psiln}\\
-        &\qquad\qquad+\frac{1}{2}(\Sp + \Sm)\frac{1}{h^2}(\Psilp-2\Psiln+\Psilm)\bigg)\\
-        \Psinp &= 2\Psiln-\Psinm + \overbrace{\frac{\lambda^2}{2\Sbar}}^{\lambda = \frac{ck}{h}}\Big(\Sp\Psilp - \Sp\Psilm - \Sm\Psilp + \Sm\Psilm \\
-        &+ \Sp\Psilp + \Sp\Psilm + \Sm\Psilp + \Sm\Psilm - 2 (\Sp + \Sm)\Psiln\Big)\\
-        \Psinp &= 2\Psiln-\Psinm+ \frac{\lambda^2}{2\Sbar}\Big(2\Sp\Psilp + 2\Sm\Psilm - 4\Sbar\Psiln\Big)\\
-        \Psinp &= 2\Psiln-\Psinm+ \frac{\lambda^2\Sp}{\Sbar}\Psilp + \frac{\lambda^2\Sm}{\Sbar}\Psilm - 2\lambda^2\Psiln\\
-        \Psinp &= 2(1-\lambda^2)\Psiln-\Psinm+ \frac{\lambda^2\Sp}{\Sbar}\Psilp + \frac{\lambda^2\Sm}{\Sbar}\Psilm,
-    \end{aligned}
+    \Psinp = 2(1-\lambda^2)\Psiln-\Psinm+ \frac{\lambda^2\Sp}{\Sbar}\Psilp + \frac{\lambda^2\Sm}{\Sbar}\Psilm,\label{eq:webstersUpdateEq}
 \end{equation}
 which is identical to Eq. (19.51) in \cite{Bilbao2018}.
 
 \subsection{Boundary Conditions}
+The choices for boundary conditions in an acoustic tube are open and closed, defined as \cite{Bilbao2018}
+\begin{equation}
+    \begin{split}
+        \partial_t\Psi &= 0\ \text{(open, Dirichlet)}\\
+        \partial_x\Psi &= 0\ \text{(closed, Neumann)},
+    \end{split}
+\end{equation} 
+at the ends of the tube. This might be slightly counter-intuitive as in the case of a string ``closed" might imply the ``clamped" or Dirichlet boundary condition. The opposite can be intuitively shown imagining a wave front with a positive acoustic potential moving through a tube and hitting a closed end. What comes back is also a wave front with a positive acoustic potential, i.e., the sign of the potential does not flip, which also happens using the free or Neumann condition for the string.
 
+In this case we follow \cite[Chapter 9]{Bilbao2009} and use the following
+\begin{equation}\label{eq:openClosed}
+    \partial_x\Psi(0, t) = 0 \quad \text{and} \quad \partial_t\Psi(L, t) = 0
+\end{equation}
+i.e. closed at the left end and open at the right end. In discrete time we have two choices for the closed condition
+\begin{equation}\label{eq:centNonCentBound}
+\begin{split}
+    \delta_{x\cdot}\Psi_0^n &= 0 \ \Rightarrow \ \Psi_{-1}^n = \Psi_1^n \quad \text{(centered)}\\
+    \delta_{x-}\Psi_0^n &= 0\  \Rightarrow \ \Psi_{-1}^n = \Psi_0^n\quad \text{(non-centered)}
+\end{split}
+\end{equation}
+At the left boundary we can now solve Eq. \eqref{eq:webstersUpdateEq} for the centered case:
+\begin{equation}
+    \begin{aligned}
+        \Psi_0^{n+1} &= 2(1-\lambda^2)\Psi_0^n-\Psi_0^{n-1}+ \frac{\lambda^2S_{1/2}}{\bar S_0}\Psi_1^n + \frac{\lambda^2S_{-1/2}}{\bar S_0}\Psi_{-1}^n\nonumber\\
+        \Psi_0^{n+1} &= 2(1-\lambda^2)\Psi_0^n-\Psi_0^{n-1}+ \frac{\lambda^2(S_{1/2}+S_{-1/2})}{\bar S_0}\Psi_1^n\nonumber\\
+         \Psi_0^{n+1} &= 2(1-\lambda^2)\Psi_0^n-\Psi_0^{n-1}+ 2\lambda^2\Psi_1^n,
+    \end{aligned}
+\end{equation}
+and the non-centered case
+\begin{equation}\label{eq:nonCentLeft}
+    \Psi_0^{n+1} = 2(1-\lambda^2)\Psi_0^n-\Psi_0^{n-1}+ \frac{\lambda^2S_{1/2}}{\bar S_0}\Psi_1^n + \frac{\lambda^2S_{-1/2}}{\bar S_0}\Psi_0^n.
+\end{equation}
+As can be seen from the equations above, we need undefined points $\bar S_0$ and $S_{-1/2}$. At the left boundary, we set $\bar S_0 = S_0$ from which, we can calculate $S_{-1/2}$:
+\begin{equation}
+        S_0 = \frac{1}{2}(S_{1/2} + S_{-1/2}) \ \Rightarrow \  S_{-1/2}
+        = 2S_0 - S_{1/2}
+\end{equation}
+The same can be done for the right boundary ($\bar S_N = S_N$) if this is chosen to be anything else but open (e.g., closed or radiating -- see Section \ref{sec:radiating}):
+\begin{equation}
+    S_N = \frac{1}{2}(S_{N+1/2} + S_{N-1/2}) \ \Rightarrow \ S_{N+1/2} = 2S_N - S_{N-1/2}.
+\end{equation}
+For now though, we follow the conditions given in \eqref{eq:openClosed} and we can simply set the right boundary to its initial state
+\begin{equation}
+    \Psi_N^n = \Psi_N^0
+\end{equation}
+which is normally $0$. A more realistic open end is a radiating one, which can be found below.
+\subsubsection{Radiating end}\label{sec:radiating}
+We can change the condition presented in Eq. \eqref{eq:openClosed} to a radiating end,
+\begin{equation}\label{eq:radCont}
+    \partial_x\Psi(L,t) = -a_1\partial_t\Psi(L,t)-a_2\Psi(L,t)
+\end{equation}
+where \cite{Bilbao2009}
+\begin{equation}
+    a_1 = \frac{1}{2(0.8216)^2c} \quad \text{and} \quad a_2 = \frac{L}{0.8216\sqrt{S_0S(1)/\pi}}.
+\end{equation}
+taken from \cite{Atig2004} and are valid for a tube terminating on an infinite plane. The terms in Eq. \eqref{eq:radCont} are a damping and an inertia term where $a_1$ is a loss coefficient and $a_2$ is the \textbf{inertia coefficient}. The centered and non-centered case are defined as
+\begin{equation}
+\begin{split}
+    \delta_{x\cdot}\Psi_N^n &= 0 \ \Rightarrow \ \Psi_{N+1}^n = \Psi_{N-1}^n \quad \text{(centered)}\\
+    \delta_{x+}\Psi_N^n &= 0\  \Rightarrow \ \Psi_{N+1}^n = \Psi_N^n\qquad \text{(non-centered)}
+\end{split}
+\end{equation}
+First, we solve Eq. \eqref{eq:radCont} for the centered (Eq. (9.16) in \cite{Bilbao2009})
+\begin{equation}\label{eq:centRadBound}
+    \delta_{x\cdot}\Psi_N^n = -a_1\dtd\Psi_N^n - a_2\mu_{t\cdot}\Psi_N^n
+\end{equation}
+which can be expanded and solved for $\Psi_{N+1}^n$ according to
+\begin{align}
+    \frac{1}{2h}(\Psi_{N+1}^n - \Psi_{N-1}^n) &= -\frac{a_1}{2k}(\Psi_N^{n+1} - \Psi_N^{n-1}) - \frac{a_2}{2}(\Psi_N^{n+1} + \Psi_N^{n-1})\nonumber\\
+    \Psi_{N+1}^n &= h\left(-\frac{a_1}{k}(\Psi_N^{n+1} - \Psi_N^{n-1}) - a_2(\Psi_N^{n+1} + \Psi_N^{n-1})\right) + \Psi_{N-1}^n,
+\end{align}
+which can be substituted into Eq. \eqref{eq:webstersUpdateEq} (Appendix \ref{app:centeredRad}) 
+\begin{equation}
+    \Psi_N^{n+1} = \frac{2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}+\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\left(\frac{a_1}{k}-a_2\right)\Psi_N^{n-1} + 2\lambda^2\Psi_{N-1}^n}{\left(1+\left(\frac{a_1}{k}+a_2\right)\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\right)}.
+\end{equation}
+The same can be done for the non-centered case (Eq. (9.15) in \cite{Bilbao2009})
+\begin{equation}\label{eq:nonCentRadBound}
+    \delta_{x+}\Psi_N^n = -a_1\dtd\Psi_N^n - a_2\mu_{t\cdot}\Psi_N^n
+\end{equation}
+which when solved for $\Psi_{N+1}^n$ yields
+\begin{align}
+    \frac{1}{h}(\Psi_{N+1}^n - \Psi_{N}^n) &= -\frac{a_1}{2k}(\Psi_N^{n+1} - \Psi_N^{n-1}) - \frac{a_2}{2}(\Psi_N^{n+1} + \Psi_N^{n-1})\nonumber\\
+        \Psi_{N+1}^n &= h\left(-\frac{a_1}{2k}(\Psi_N^{n+1} - \Psi_N^{n-1}) - \frac{a_2}{2}(\Psi_N^{n+1} + \Psi_N^{n-1})\right) + \Psi_{N}^n.
+\end{align}
+Substituted into Eq. \eqref{eq:webstersUpdateEq} yields (Appendix \ref{app:nonCentRad})
+\begin{equation}
+    \Psi_N^{n+1} = \frac{2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}+\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\left(\frac{a_1}{2k}-\frac{a_2}{2}\right)\Psi_N^{n-1} + \frac{\lambda^2S_{N+1/2}}{\bar S_N}\Psi_{N}^n + \frac{\lambda^2S_{N-1/2}}{\bar S_N}\Psi_{N-1}^n}{\left(1+\left(\frac{a_1}{2k}+\frac{a_2}{2}\right)\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\right)}.
+\end{equation}
+
+\subsection{Energy}
+In continuous time, the rate of change of the energy of a PDE can be obtained by taking the inner product with the first-order time derivative of the state. Using state $\Psi$, this yields
+\begin{equation}
+    \frac{d\mathfrak{H}}{dt} = \langle \partial_t\Psi, \text{PDE} \rangle\quad \text{where} \quad \mathfrak{H} = \mathfrak{T} + \mathfrak{D},
+\end{equation}
+with total energy (or Hamiltonian) $\mathfrak{H}$, kinetic energy $\mathfrak{T}$ and potential energy $\mathfrak{D}$.
+
+In discrete time, the energy of a FDS can be obtained by taking the inner product the equation with $\dtd\Psiln$ according to 
+\begin{equation}\label{eq:energyForm}
+    \delta_{t+}\mathfrak{h} = \langle \dtd\Psiln,\text{FDS}\rangle \quad \text{where} \quad \mathfrak{h} = \mathfrak{t} + \mathfrak{v},
+\end{equation}
+where $\mathfrak{h}$, $\mathfrak{t}$ and $\mathfrak{v}$ are the discrete counterparts of $\mathfrak{H}$, $\mathfrak{T}$ and $\mathfrak{D}$.
+
+With a boundary term present, Eq. \eqref{eq:energyForm} becomes
+\begin{equation}\label{eq:energyFormBoundary}
+    \delta_{t+}\mathfrak{h} = \mathfrak{b}.
+\end{equation}
+In the case of the radiating boundary -- with an inertia and damping term -- the energy equation is of the form
+\begin{equation}\label{eq:radiatingEnergyForm}
+    \delta_{t+}(\mathfrak{h}+\mathfrak{h}_\text{b}) = -\mathfrak{q}_\text{b},
+\end{equation}
+where $\mathfrak{h}_\text{b}$ is the energy stored by the boundary and $\mathfrak{q}_\text{b}$ is the loss energy.
+\subsubsection{Kinetic Energy}
+The (discrete) kinetic energy of the system $\mathfrak{t}$ of Webster's equation in Eq. \eqref{eq:discWebster} is found by taking the inner product of the left side of the equation with $\dtd\Psi$ according to
+\begin{equation}
+    \delta_{t+}\mathfrak{t} = \langle\dtd\Psiln,\Sbar \delta_{tt}\Psiln  \rangle_\mathcal{D},
+\end{equation}
+where domain $\mathcal{D}\in [0, N]$. As $\Sbar$ is merely a coefficient here, we can use identity (2.22a) from \cite{Bilbao2009} and rewrite to
+\begin{equation}
+    \begin{aligned}
+    \delta_{t+}\left(\frac{1}{2}\sum_\mathcal{D}h\Sbar(\delta_{t-}\Psiln)^2\right)\quad \Rightarrow \quad \delta_{t+}\left(\frac{1}{2}\sum_\mathcal{D}h(\sqrt{\Sbar}\delta_{t-}\Psiln)^2\right)
+    \end{aligned}.
+\end{equation}
+We place $\Sbar$ as a square-root in the equation, so that we can rewrite it as a norm over a domain as
+\begin{equation}
+    \mathfrak{t} = \frac{1}{2}\lVert\sqrt{\bar S}\delta_{t-}\Psiln\rVert_\mathcal{D}^2
+\end{equation}
+just like Eq. (9.14) in \cite{Bilbao2009}. When the boundaries of the scheme are centered we need to use a primed inner product (Eq. (5.23) in \cite{Bilbao2009}) as Bilbao explains right below Eq. (5.28) in \cite{Bilbao2009}.
+
+\subsubsection{Potential Energy}
+It can be shown that \eqref{eq:discWebster} is equal to
+\begin{equation}
+    \Sbar \delta_{tt}\Psi^n_l = c^2\dxm\big(\Sp(\dxp\Psiln)\big),
+\end{equation}
+i.e. changing the signs of the operators at the left side of the equation. Using $(\mup S = S_{l+1/2})$), we define
+\begin{equation}\label{eq:potContEnergy}
+c^2\langle \dtd\Psiln, \dxm((\mup S)(\dxp\Psiln))\rangle_\mathcal{D},
+\end{equation}
+which, using summation by parts (see Appendix \ref{app:summation}) can be written as (see Appendix \ref{app:potDeriv})
+\begin{equation}\label{eq:discROCPotBound}
+\underbrace{-c^2\langle(\mu_{x+}S)\dtd\dxp\Psiln, \dxp\Psiln\rangle_{\underline{\mathcal{D}}}}_{\let\scriptstyle\textstyle\delta_{t+}\mathfrak{v}} + \underbrace{c^2\Big( (\dtd\Psi_N^n)(\mup S_N)(\dxp\Psi_N^n) -(\dtd\Psi_0^n)(\mum S_0)(\dxm \Psi_0^n)\Big)}_{\mathfrak{b}},
+\end{equation}
+with boundary energy term $\mathfrak{b}$ as seen in Eq. \eqref{eq:energyFormBoundary} (for more detail, see Section \ref{sec:boundaries}).
+Notice that $\mup S$ has been moved to the other side of the inner product according to match Eq. (9.14) in \cite{Bilbao2009}. We can also take $\mup S$ out of the inner product (as it is a coefficient here)
+\begin{equation}
+    -c^2(\mu_{x+}S)\langle\dtd\dxp\Psiln, \dxp\Psiln\rangle_{\underline{\mathcal{D}}},
+\end{equation}
+to use Eq. (2.22b) to end up with 
+\begin{equation}
+    \delta_{t+}\mathfrak{v} = \delta_{t+}\left(-\frac{c^2}{2}(\mu_{x+}S)\langle\dxp\Psiln, e_{t-}\dxp\Psiln\rangle_{\underline{\mathcal{D}}}\right),
+\end{equation}
+where (again, as $S$ acts as a coefficient) $\mup S$ can be inserted back into the inner product
+\begin{equation}
+   \mathfrak{v}=-\frac{c^2}{2}\langle(\mu_{x+}S)\dxp\Psiln, e_{t-}\dxp\Psiln\rangle_{\underline{\mathcal{D}}}.
+\end{equation}
+See Appendix \ref{app:proof} for a proof of this.
+
+\subsubsection{Boundaries}\label{sec:boundaries}
+Recalling the boundary term from Eq. \eqref{eq:discROCPotBound} 
+\begin{equation}
+    \mathfrak{b} = \underbrace{ c^2(\dtd\Psi_N^n)(\mup S_N)(\dxp\Psi_N^n)}_{\mathfrak{b_\text{r}} \text{ (right boundary)}} -\underbrace{c^2(\dtd\Psi_0^n)(\mum S_0)(\dxm \Psi_0^n)}_{\mathfrak{b}_\text{l} \text{ (left boundary)}}
+\end{equation}
+We first consider the left boundary. Recalling Eq. \eqref{eq:centNonCentBound}, we see that for the non-centered case, $\Psi_{-1}^n = \Psi_0^n$. This means that $(\dxm\Psi_0^n) = 0 $ yielding
+\begin{equation}
+    \mathfrak{b}_\text{l} = c^2(\dtd\Psi_0^n)(S_{-1/2})(0) = 0.
+\end{equation}
+For the centered case, $\Psi_{-1}^n = \Psi_1^n$. Substituting this into the equation for the left boundary yields
+\begin{equation}
+    \mathfrak{b}_\text{l} = \frac{c^2}{2kh}(\Psi_0^{n+1} - \Psi_0^{n-1})(S_{-1/2})(\Psi_0^n - \Psi_1^n)
+\end{equation}
+Continuing with the right boundary it can be seen that the lossless case, where $(\dtd \Psi_N^n) = 0$ results in 
+\begin{equation}
+    \mathfrak{b}_\text{r} = c^2(0)(S_{N+1/2})(\dxp\Psi_N^n) = 0.
+\end{equation}
+The damped condition, however, is much more interesting. In the non-centered case, we can substitute this into the definition found in Eq. \eqref{eq:nonCentRadBound} to get
+\begin{align}
+    \mathfrak{b}_\text{r} &= c^2(\dtd\Psi_N^n)( S_{N+1/2})(-a_1\dtd\Psi_N^n - a_2\mu_{t\cdot}\Psi_N^n)\nonumber\\
+    &= c^2 S_{N+1/2}\left(-a_1(\dtd\Psi_N^n)^2 - \frac{a_2}{2}\dtd(\Psi_N^n)^2\right).
+\end{align}
+As this boundary both has damping with energy term $\mathfrak{q}_\text{b}$ and inertia with stored energy $\mathfrak{h}_\text{b}$ it can be written in the form found in Eq. \eqref{eq:radiatingEnergyForm}. First, substituting $\mathfrak{b}_\text{r}$ into Eq. \eqref{eq:energyFormBoundary} yields %we can subdivide $\mathfrak{b}_r$ as follows:
+\begin{align}
+\delta_{t+}\mathfrak{h} &= c^2 S_{N+1/2}\left(-a_1(\dtd\Psi_N^n)^2 - \frac{a_2}{2}\dtd(\Psi_N^n)^2\right)\\
+\delta_{t+}\mathfrak{h} + \frac{c^2S_{N+1/2}a_2}{2}\delta_{t+}\mu_{t-} (\Psi_N^n)^2 &= -c^2S_{N+1/2}a_1(\dtd\Psi_N^n)^2
+\end{align}
+%
+\begin{gather}
+\delta_{t+}\left(\mathfrak{h} + \mathfrak{h}_\text{b}\right) = -\mathfrak{q}_\text{b} \quad \text{where}\\
+\mathfrak{h}_\text{b} = \frac{c^2S_{N+1/2}a_2}{2}\mu_{t-} (\Psi_N^n)^2 \quad \text{and} \quad
+\mathfrak{q}_\text{b} = c^2S_{N+1/2}a_1(\dtd\Psi_N^n)^2,
+\end{gather}
+which is exactly what we find in \cite{Bilbao2009} underneath Eq. (9.15).
+
+The centered case found in Eq. \eqref{eq:centRadBound} needs to be rewritten in the form $\dxp\Psi_N^n = \hdots$ to be able to be substituted into the right boundary term. This is done as follows
+\begin{align}
+    \delta_{x\cdot}\Psi_N^n &= -a_1\dtd\Psi_N^n - a_2\mu_{t\cdot}\Psi_N^n\nonumber\\
+    \Psi_{N+1}^n-\Psi_{N-1}^n &= 2h\left(-a_1\dtd\Psi_N^n - a_2\mu_{t\cdot}\Psi_N^n\right)\nonumber\\
+    \Psi_{N+1}^n-\Psi_N^n+\Psi_N^n-\Psi_{N-1}^n &= 2h\left(-a_1\dtd\Psi_N^n - a_2\mu_{t\cdot}\Psi_N^n\right)\nonumber\\
+    \dxp\Psi_N^n+\dxm\Psi_N^n &= 2\left(-a_1\dtd\Psi_N^n - a_2\mu_{t\cdot}\Psi_N^n\right)\nonumber\\
+    \dxp\Psi_N^n &= 2\left(-a_1\dtd\Psi_N^n - a_2\mu_{t\cdot}\Psi_N^n\right)-\dxm\Psi_N^n
+\end{align}
+which can then be substituted into the right boundary term
+\begin{align}
+    \mathfrak{b}_\text{r} &=  c^2(\dtd\Psi_N^n)(S_{N+1/2})(2\left(-a_1\dtd\Psi_N^n - a_2\mu_{t\cdot}\Psi_N^n\right)-\dxm\Psi_N^n)\nonumber\\
+&= c^2S_{N+1/2}\left(-2a_1(\dtd\Psi_N^n)^2 - a_2\dtd(\Psi_N^n)^2-(\dtd\Psi_N^n)(\dxm\Psi_N^n)\right)
+\end{align}
+\SWcomment[Here, we can write it in the same form as Eq. \eqref{eq:radiatingEnergyForm} with
+\begin{equation}
+    \mathfrak{h}_\text{b} = c^2S_{N+1/2}a_2\mu_{t-} (\Psi_N^n)^2  \quad \text{and} \quad
+\mathfrak{q}_\text{b} = 2c^2S_{N+1/2}a_1(\dtd\Psi_N^n)^2,
+\end{equation}
+with a \textbf{leftover term}
+\begin{equation}
+    \mathfrak{?}_\text{b} = -(\dtd\Psi_N^n)(\dxm\Psi_N^n).
+\end{equation}]
+
+\section{Time-varying System}
+The PDE for the time-varying version of Webster's equation is (Eq. (9.23) in \cite{Bilbao2009})
+\begin{equation}
+     \partial_t(S\partial_t\Psi) = c^2 \partial_x(S\partial_x\Psi)
+\end{equation}
+which can be discretised as (right below Eq. (9.23) in \cite{Bilbao2009})
+\begin{equation}
+    \delta_{t+}\big((\mu_{t-}\bar S_l^n)(\delta_{t-}\Psiln)\big) = c^2\dxp\big((\muTT \Sm^n)(\dxm\Psiln)\big)
+\end{equation}
+The update scheme for this time varying system can be written as
+\begin{equation}
+    \begin{aligned}
+        (\mu_{t+}\bar S_l^n)\Psinp &= \Big(2 \mu_{tt}\bar S_l^n -  \lambda^2(\muTT \Sp^n + \muTT \Sm^n)\Big) \Psiln \\
+        &+ \lambda^2 \Big((\muTT \Sp^n)\Psilp + (\muTT\Sm)\Psilm\Big) - (\mu_{t-}\bar S_l^n)\Psinm
+    \end{aligned}
+\end{equation}
+
+\section{Excitation}
+To excite the system, an input impedance can be defined as follows
+\begin{equation}
+\delta_{x\cdot}\Psi_0^n = -v_\text{in}^n.
+\end{equation} 
+Rewriting to
+\begin{equation}
+    \frac{1}{2h}(\Psi_1^n-\Psi_{-1}^n) = -v_\text{in}^n \quad \Rightarrow \quad \Psi_{-1}^n = \Psi_1^n + 2hv_\text{in}^n
+\end{equation}
+and substituting this in Eq. \eqref{eq:webstersUpdateEq} at $l=0$ yields
+\begin{align}
+    \Psi_0^{n+1}&= 2(1-\lambda^2)\Psi_0^n-\Psi_0^{n-1}+ \frac{\lambda^2S_{1/2}}{\bar S_0}\Psi_1^n + \frac{\lambda^2S_{-1/2}}{\bar S_0}\Psi_1 + \frac{2h\lambda^2S_{-1/2}}{\bar S_0}v_\text{in}^n,\nonumber\\
+    \Psi_0^{n+1}&= 2(1-\lambda^2)\Psi_0^n-\Psi_0^{n-1}+ \frac{2\lambda^2(S_{1/2}+S_{-1/2})}{S_{1/2}+S_{-1/2}}\Psi_1^n+ \frac{2h\lambda^2S_{-1/2}}{\bar S_0}v_\text{in}^n,\nonumber\\
+    \Psi_0^{n+1}&= 2(1-\lambda^2)\Psi_0^n-\Psi_0^{n-1}+ 2\lambda^2\Psi_1^n+ \frac{2h\lambda^2S_{-1/2}}{\bar S_0}v_\text{in}^n,
+\end{align}
+which is identical to Eq. (19.58) in \cite{Bilbao2018}.
+\section{Damping}
+As said in \cite{Bilbao2013}, a fractional derivative can be used for viscothermal damping. This, in discrete time can be approximated using the bilinear transform (or Tustin's transformation).
+
+Following \cite{Chen2002}:
+\begin{equation}
+    (\omega(\z))^r = \left(\frac{2}{k}\right)^r \left(\frac{1-\z}{1+\z}\right)^r.
+\end{equation}
+Then, if we consider $r = 3$:
+\begin{equation}
+    \begin{aligned}
+    (\omega(\z))^3 &= \left(\frac{2}{k}\right)^3\left(\frac{(1-\z)^3}{(1+\z)^3}\right)\\
+    &= \left(\frac{2}{k}\right)^3\left(\frac{1-\z-2\z+2z^{-2}+z^{-2}-z^{-3}}{1+\z+2\z+2z^{-2}+z^{-2}+z^{-3}}\right)\\
+    &= \left(\frac{2}{k}\right)^3\left(\frac{1-3\z+3z^{-2}-z^{-3}}{1+3\z+3z^{-2}+z^{-3}}\right)
+    \end{aligned}
+\end{equation}
+We can do the same if we follow Eq. (2) from \cite{Chen2002} with $n=3$:
+\begin{equation}
+    \begin{aligned}
+    (\omega(\z))^3 &= \left(\frac{2}{k}\right)^3\frac{A_3(\z,3)}{A_3(\z,-3)}\\
+    &= \left(\frac{2}{k}\right)^3\frac{-\frac{1}{3}3z^{-3}+\frac{1}{3}3^2z^{-2}-3\z+1}{-\frac{1}{3}(-3)z^{-3}+\frac{1}{3}(-3)^2z^{-2}-(-3)\z+1}\\
+    &=\left(\frac{2}{k}\right)^3\frac{-z^{-3}+3z^{-2}-3\z+1}{z^{-3}+3z^{-2}+3\z+1},
+    \end{aligned}
+\end{equation}
+which is equivalent to (19).
+
+\subsection{Muir-recursion}
+The Muir-recursion is described as
+\begin{equation}\label{eq:muir}
+    A_n(\z,r) = A_{n-1}(\z,r) -c_nz^nA_{n-1}(z,r) \quad \text{with} \quad A_0(z^{-1},r) = 1
+\end{equation}
+and
+\begin{equation}
+    c_n=
+    \begin{cases}
+    r/n & n \text{ is odd},\\
+    0 & n \text{ is even.}
+    \end{cases}
+\end{equation}
+If we let $n=3$ we get
+\begin{equation}
+    \begin{aligned}
+        A_3(\z,r)&= A_2(\underbrace{(\z)^{-1}}_{z},r) - \frac{r}{3}(\z)^3A_2(\z,r)\\
+        &= A_1((z)^{-1},r) - \frac{r}{3}z^{-3}A_1((\z)^{-1},r)\\
+        &= A_0((\z)^{-1},r) - r(\z)^1A_0(\z,r)-\frac{r}{3}z^{-3}\left(A_0((z)^{-1},r)-rz^1A_0(z,r)\right)\\
+        &(if\ A_0(z,r) = 1)\\
+        &=1-r\z-\frac{r}{3}z^{-3}\left(1-rz\right)\\
+        &=1-r\z+\frac{r^2}{3}z^{-2}-\frac{r}{3}z^{-3}
+    \end{aligned}
+\end{equation}
+\subsection{Implementation of Muir-recursion}
+Classes and member variables
+
+\begin{itemize}
+    \item \texttt{Z}
+    \subitem \texttt{\type[double] coeff}
+    \subitem \texttt{\type[int] power}
+    \item \texttt{Equation\textless M\textgreater}
+    \subitem \texttt{\type[std::vector\textless M\textgreater] zs} (of length M+1)
+    \subitem \texttt{\type[int] zSign} (that only takes the values $-1$ and $1$).
+\end{itemize}
+
+There are a few observations that I made that helped the implementation
+\begin{itemize}
+    \item 
+\end{itemize}
+
+\subsubsection{The \texttt{swapCoeffs (\type[int] amount)} function}
+This function is called when a \texttt{Z} is multiplied onto an \texttt{Equation}, i.e. the last term of Eq. \eqref{eq:muir} ($z^nA_{n-1}(z,r)$). I observed that in this term of the recursion the following relationship is true:
+\begin{equation}\label{eq:relationship}
+    \text{For any } z^p\cdot A(z,r), \quad  p = p_{A+} + 2\cdot\text{sgn}(p_{A+}),
+\end{equation}
+where $p_{A+}$ is the largest  power whether positive or negative present in $A$ (i.e. furthest away from 0). For example, the following could occur in the recursion:
+\begin{equation}\label{eq:recursionExample}
+    z^3 (A_1(z^{-1}, r)) = z^3(1 - rz^{-1}) = z^3 - rz^2.
+\end{equation}
+In this case $p_{A+} = -1$, and $p = 3$ (as can also be seen from the relationship in \eqref{eq:relationship}).
+\\
+\\
+\noindent Now, the implementation of this allows us to swap coefficients of the \texttt{Z}'s in the z-vector around
+\begin{equation}
+\text{swap-around index} = |p| / 2,
+\end{equation}
+where $p$ is -- again -- the power of the $z$ multiplied onto the equation. As this power is always odd, the swap-around index is an integer-and-a-half. For the above example, the \texttt{Z} is $z^3$ and the \texttt{Equation} is $A_1(z^{-1},r) = 1-rz^{-1}$. The coefficients-vector of the \texttt{Equation}, \texttt{$\{$1, -r, 0, 0$\}$} (with negative powers) can now be flipped around index abs(3) / 2 = 1.5, so between index $1$ and $2$. If this is done and the signs of the powers of the \texttt{Z}'s in the vector are flipped, the coefficient-vector of the solution looks like \texttt{$\{$0, 0, -r, 1$\}$} (with positive powers), which is shown in the Eq. \eqref{eq:recursionExample}, i.e. $0z^0+0z^1-rz^2+1z^3$.
+     
 \bibliographystyle{plain}
 \bibliography{bibliography}
+\appendix
+\def\Psinplp{\Psi_{l+1}^{n+1}}
+\def\Psinmlp{\Psi_{l+1}^{n-1}}
 
+\section{Derivations}
+\subsection{Webster's Update Equation}\label{app:webstersUpdateEq}
+
+\begin{align}
+    \frac{\Sbar}{k^2}(\Psinp - 2\Psiln+\Psinm) &= c^2\left((\dxp \Sm)(\mup \dxm \Psiln) + (\mup \Sm)(\dxp \dxm \Psiln)\right)\nonumber\\
+    \Psinp - 2\Psiln+\Psinm &= \frac{c^2k^2}{\Sbar}\bigg(\frac{1}{h}(\Sp - \Sm)\frac{1}{2h}\overbrace{(\Psilp -\Psilm)}^{\mup\dxm\Psiln = \delta_{x\cdot}\Psiln}\nonumber\\
+    &\qquad\qquad+\frac{1}{2}(\Sp + \Sm)\frac{1}{h^2}(\Psilp-2\Psiln+\Psilm)\bigg)\nonumber\\
+    \Psinp &= 2\Psiln-\Psinm + \overbrace{\frac{\lambda^2}{2\Sbar}}^{\lambda = \frac{ck}{h}}\Big(\Sp\Psilp - \Sp\Psilm - \Sm\Psilp + \Sm\Psilm \nonumber\\
+    &+ \Sp\Psilp + \Sp\Psilm + \Sm\Psilp + \Sm\Psilm - 2 (\Sp + \Sm)\Psiln\Big)\nonumber\\
+    \Psinp &= 2\Psiln-\Psinm+ \frac{\lambda^2}{2\Sbar}\Big(2\Sp\Psilp + 2\Sm\Psilm - 4\Sbar\Psiln\Big)\nonumber\\
+    \Psinp &= 2\Psiln-\Psinm+ \frac{\lambda^2\Sp}{\Sbar}\Psilp + \frac{\lambda^2\Sm}{\Sbar}\Psilm - 2\lambda^2\Psiln\nonumber\\
+    \Psinp &= 2(1-\lambda^2)\Psiln-\Psinm+ \frac{\lambda^2\Sp}{\Sbar}\Psilp + \frac{\lambda^2\Sm}{\Sbar}\Psilm,
+\end{align}
+
+\subsection{Centered Radiation}
+\label{app:centeredRad} 
+\begin{align}
+    \Psi_N^{n+1} = &\ 2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}+ \frac{\lambda^2S_{N+1/2}}{\bar S_N}\Psi_{N+1}^n + \frac{\lambda^2S_{N-1/2}}{\bar S_N}\Psi_{N-1}^n\nonumber\\
+    \Psi_N^{n+1} = &\ 2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}\nonumber\\
+    &+\frac{\lambda^2S_{N+1/2}}{\bar S_N}\left[h\left(-\frac{a_1}{k}(\Psi_N^{n+1} - \Psi_N^{n-1}) - a_2(\Psi_N^{n+1} + \Psi_N^{n-1})\right)+\Psi_{N-1}^n\right]\nonumber\\
+    &+ \frac{\lambda^2S_{N-1/2}}{\bar S_N}\Psi_{N-1}^n\nonumber\\
+    \Psi_N^{n+1} = &\ 2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}+ \frac{h\lambda^2S_{N+1/2}}{\bar S_N}\left[\left(-\frac{a_1}{k} - a_2\right)\Psi_N^{n+1} + \left(\frac{a_1}{k}-a_2\right)\Psi_N^{n-1}\right]\nonumber\\
+    &+ \frac{\lambda^2(S_{N+1/2}+S_{N-1/2})}{\bar S_N}\Psi_{N-1}^n\nonumber\\
+    \!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\bigg(1+\Big(\frac{a_1}{k}+a_2\Big)\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\bigg)\Psi_N^{n+1} =&\  2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}+\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\left(\frac{a_1}{k}-a_2\right)\Psi_N^{n-1} + 2\lambda^2\Psi_{N-1}^n\nonumber\\
+    \Psi_N^{n+1} = &\  \frac{2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}+\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\left(\frac{a_1}{k}-a_2\right)\Psi_N^{n-1} + 2\lambda^2\Psi_{N-1}^n}{\left(1+\left(\frac{a_1}{k}+a_2\right)\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\right)}
+\end{align}
+\subsection{Non-centered Radiation}\label{app:nonCentRad}
+\begin{align}
+    \Psi_N^{n+1} = &\ 2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}+ \frac{\lambda^2S_{N+1/2}}{\bar S_N}\Psi_{N+1}^n + \frac{\lambda^2S_{N-1/2}}{\bar S_N}\Psi_{N-1}^n\nonumber\\
+    \Psi_N^{n+1} = &\ 2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}\nonumber\\
+    &+\frac{\lambda^2S_{N+1/2}}{\bar S_N}\left[h\left(-\frac{a_1}{2k}(\Psi_N^{n+1} - \Psi_N^{n-1}) - \frac{a_2}{2}(\Psi_N^{n+1} + \Psi_N^{n-1})\right)+\Psi_N^n\right]\nonumber\\
+    &+ \frac{\lambda^2S_{N-1/2}}{\bar S_N}\Psi_{N-1}^n\nonumber\\
+    \Psi_N^{n+1} = &\ 2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}+ \frac{h\lambda^2S_{N+1/2}}{\bar S_N}\left[\left(-\frac{a_1}{2k} - \frac{a_2}{2}\right)\Psi_N^{n+1} + \left(\frac{a_1}{k}-\frac{a_2}{2}\right)\Psi_N^{n-1}\right]\nonumber\\
+    &+ \frac{\lambda^2S_{N+1/2}}{\bar S_N}\Psi_{N}^n+ \frac{\lambda^2S_{N-1/2}}{\bar S_N}\Psi_{N-1}^n \nonumber\\
+    \!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\bigg(1+\Big(\frac{a_1}{2k}+\frac{a_2}{2}\Big)\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\bigg)\Psi_N^{n+1} =&\  2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}+\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\left(\frac{a_1}{2k}-\frac{a_2}{2}\right)\Psi_N^{n-1}\nonumber\\
+    &+ \frac{\lambda^2S_{N+1/2}}{\bar S_N}\Psi_{N}^n+ \frac{\lambda^2S_{N-1/2}}{\bar S_N}\Psi_{N-1}^n \nonumber\\
+    \Psi_N^{n+1} = &\  \frac{2(1-\lambda^2)\Psi_N^n-\Psi_N^{n-1}+\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\left(\frac{a_1}{2k}-\frac{a_2}{2}\right)\Psi_N^{n-1} + \frac{\lambda^2S_{N+1/2}}{\bar S_N}\Psi_{N}^n + \frac{\lambda^2S_{N-1/2}}{\bar S_N}\Psi_{N-1}^n}{\left(1+\left(\frac{a_1}{2k}+\frac{a_2}{2}\right)\frac{h\lambda^2S_{N+1/2}}{\bar S_N}\right)}
+\end{align}
+\section{Inner Product with $S$}\label{app:proof}
+\begin{equation}
+\begin{aligned}
+        &-c^2\langle\dtd\dxp\Psiln, \mup S\dxp\Psiln\rangle_\mathcal{D},\\
+        \Longleftrightarrow \quad
+        &-c^2\sum_\mathcal{D} h(\dtd\dxp\Psiln)( \mup S\dxp\Psiln)\\
+        \Longleftrightarrow \quad & -c^2\sum_\mathcal{D}\frac{h}{4kh^2}\left(\Psinplp - \Psinmlp-\Psinp+\Psinm\right)\left(S_{l+1} + S_l\right)\left(\Psilp-\Psiln\right)\\
+        \Longleftrightarrow \quad
+        & -c^2\sum_\mathcal{D}\frac{h}{4kh^2}\big(\Psinplp\Psilp-\Psinplp\Psiln-\Psinp\Psilp+\Psinp\Psiln\\
+        &\qquad\qquad\qquad\!\!\!\!\!\;-\Psilp\Psinmlp+\Psilp\Psinm+\Psiln\Psinmlp-\Psiln\Psinm\big)\left(S_{l+1}+S_l\right)\\
+        \Longleftrightarrow \quad
+        & -c^2\sum_\mathcal{D}\frac{h}{4h^2}\delta_{t+}\left(\Psilp\Psinmlp-\Psilp\Psinm-\Psiln\Psinmlp+\Psiln\Psinm\right)\left(S_{l+1}+S_l\right)\\
+        \Longleftrightarrow \quad
+        & \delta_{t+}\left(-c^2\sum_\mathcal{D}\frac{h}{2}(\dxp\Psiln)(\dxp\Psinm)(\mup S)\right)
+        \\
+        \Longleftrightarrow \quad
+        & \delta_{t+}\left(-\frac{c^2}{2}\langle(\mup S)\dxp\Psiln,e_{t-}\Psiln\rangle_\mathcal{D}\right),
+    \end{aligned}
+\end{equation}
+which (except for the use of $c$ instead of $\gamma$) is equivalent to Eq. (9.14).
+
+\section{Summation by parts (proving equations (5.25) and (5.26))}\label{app:summation}
+The general form of summation by parts of two functions $f$ and $g$, the latter of which has a single spatial derivative is as follows (Eq. 5.25) in \cite{Bilbao2009}):
+\begin{equation}\label{eq:genSum}
+    \langle f, \delta_{x+}g \rangle_\mathcal{D} = \sum_{l=d_-}^{d_+}hf_l\frac{1}{h}(g_{l+1}-g_l) = -\langle \delta_{x-}f, g\rangle_\mathcal{D} + f_{d_+}g_{d_++1} - f_{d_--1}g_{d_-}
+\end{equation}
+Proving this, we can use an example domain of $\mathcal{D}\in[0,...,3]$:
+\begin{equation}
+    \begin{aligned}
+        \sum_{l=0}^3hf_l\frac{1}{h}(g_{l+1}-g_l) &= f_0g_1-f_0g_0 + f_1g_2-f_1g_1 + f_2g_3-f_2g_2 + f_3g_4-f_3g_3\\
+        &= g_0(f_{-1}-f_0) + g_1(f_0-f_1) + g_2(f_1-f_2) + g_3(f_2-f_3) + f_3g_4 - f_{-1}g_0 \\
+        &= -g_0(f_0-f_{-1}) - g_1(f_1-f_0) - g_2(f_2-f_1) - g_3(f_3-f_2) + f_3g_4 - f_{-1}g_0\\
+        &= -\sum_{l=0}^3 g_l(f_l-f_{l-1}) + f_3g_4 - f_{-1}g_0\\
+        &= -\sum_{l=0}^3 h\delta_{x-}f_lg_l + f_3g_4 - f_{-1}g_0
+    \end{aligned}
+\end{equation}
+Then replacing the applied domain with the general form yields
+\begin{equation}
+    -\sum_{l=d_-}^{d_+}h\delta_{x-}f_lg_l + f_{d_+}g_{d_++1} - f_{d_--1}g_{d_-} \quad \Rightarrow \quad -\langle \delta_{x-}f, g\rangle_\mathcal{D} + f_{d_+}g_{d_++1} - f_{d_--1}g_{d_-}
+\end{equation}
+which is the general form in \eqref{eq:genSum}.
+
+In the same way, we can prove Eq. (5.26):
+\begin{equation}
+    \begin{aligned}
+    \langle f,\delta_{x+}g\rangle_{\underline{\mathcal{D}}}=\sum_{l=0}^2hf_l\delta_{x+}g_l &= f_0g_1-f_0g_0 + f_1g_2-f_1g_1 + f_2g_3-f_2g_2 \\
+    &= - g_1(f_1-f_0) - g_2(f_2-f_1) - g_3(f_3-f_2) + f_3g_3 - f_0g_0
+    \\
+    &= -\sum_{l=1}^3h\delta_{x-}f_lg_l + f_3g_3 - f_0g_0
+    \end{aligned}
+\end{equation}
+Again, going general yields
+\begin{equation}
+    -\sum_{l=d_-+1}^{d_+}h\delta_{x-}f_lg_l + f_{d_+}g_{d_+}-f_{d_-}g_{d_-} \quad \Rightarrow \quad -\langle \delta_{x-}f,g\rangle_{\overline{\mathcal{D}}} + f_{d_+}g_{d_+}-f_{d_-}g_{d_-}
+\end{equation}
+\subsection{Proving (5.27)}
+Using again an example domain of $\mathcal{D}\in [0,\hdots,3]$ 
+\begin{equation}
+    \begin{aligned}
+        \langle f,\delta_{xx}g \rangle_\mathcal{D} &= \sum_{l=0}^3 h f_l\frac{1}{h^2}(g_{l+1}-2g_l+g_{l-1})\\
+        &= \frac{1}{h}\Big(f_0g_{-1} - 2 f_0g_0 + f_0g_1 + f_1g_0 - 2 f_1g_1 + f_1g_2+ f_2g_{1} - 2 f_2g_2 + f_2g_3 + f_3g_2 - 2f_3g_3 + f_3g_4 \Big)\\
+        &=\frac{1}{h}\Big(f_0g_{-1} + g_0(f_{-1}-2f_0+f_1) - g_0f_{-1} + g_1(f_0-2f_1+f_2)+\\
+        &\qquad\ \ \;g_2(f_1-2f_2+f_3)+ g_3(f_2-2f_3+f_4) - g_3f_4 + f_3g_4\Big)\\
+        &=\frac{1}{h}\Big(\sum_{l=0}^3 h^2 g_l\delta_{xx}f_l + f_0g_{-1}-g_0f_{-1} - g_3f_4 + f_3g_4\Big)\\
+        &= \sum_{l=0}^3 h g_l\delta_{xx}f_l + \frac{1}{h}\Big(-f_0g_0+f_0g_{-1}+f_0g_0-f_{-1}g_0+f_3g_4-f_3g_3-f_4g_3+f_3g_3\Big)\\
+        &= \sum_{l=0}^3 h g_l\delta_{xx}f_l -f_0\delta_{x-}g_0+g_0\delta_{x-}f_0+f_3\delta_{x+}g_3-g_3\delta_{x+}f_3
+    \end{aligned}
+\end{equation}
+\subsection{The same with a primed inner product}
+The primed inner product from \cite{Bilbao2009} is defined as
+\begin{equation}
+    \langle f^n,g^n \rangle_\mathcal{D}' = \sum_{d_-+1}^{d_+-1}hf_l^ng_l^n+\frac{h}{2}f_{d-}^ng_{d-}^n+\frac{h}{2}f_{d+}^ng_{d+}^n,
+\end{equation}
+so essentially a regular inner product with the outer terms scaled by $1/2$.
+
+Using the same case as above we get
+\begin{equation}
+\begin{aligned}
+    \langle f,\delta_{xx}g \rangle_\mathcal{D}' &= \sum_{l=1}^2 h f_l\frac{1}{h^2}(g_{l+1}-2g_l+g_{l-1}) + \frac{h}{2}f_0\frac{1}{h^2}(g_1-2g_0+g_{-1}) + f_3 \frac{1}{h^2}(g_{4}-2g_3+g_2)\\
+    &=\frac{1}{h}\Big(\frac{1}{2}(f_0g_1-2f_0g_0+f_0g_{-1})+f_1g_2-2f_1g_1+f_1g_0\\
+    &\qquad\ +f_2g_3-2f_2g_2+f_2g_1+\frac{1}{2}(f_3g_4-2f_3g_3+f_3g_2)\Big)\\
+    & = \frac{1}{h}\Big(g_1(f_2-2f_1+f_0)-\frac{1}{2}f_0g_1+g_2(f_3-2f_2+f_1)-\frac{1}{2}f_3g_2\\
+    &\qquad\ -f_0g_0+\frac{1}{2}f_0g_{-1}-f_3g_3+\frac{1}{2}f_3g_4+f_1g_0+f_2g_3)\Big)\\
+    &= \frac{1}{h}\left(\sum_{l=1}^2h^2g_l\delta_{xx}f_l+\frac{1}{2}f_0g_{-1}-f_0g_0-\frac{1}{2}f_0g_1+f_1g_0+f_2g_3-\frac{1}{2}f_3g_2-f_3g_3+\frac{1}{2}f_3g_4\right)\\
+    &= \langle \delta_{xx}f,g\rangle_\mathcal{D}' -\frac{h}{2}g_0\delta_{xx}f_0-\frac{h}{2}g_3\delta_{xx}f_3\\
+    &\qquad\ +\frac{1}{h}\left(\frac{1}{2}f_0g_{-1}-f_0g_0-\frac{1}{2}f_0g_1+f_1g_0+f_2g_3-\frac{1}{2}f_3g_2-f_3g_3+\frac{1}{2}f_3g_4\right)\\
+    &= \langle \delta_{xx}f,g\rangle_\mathcal{D}' -\frac{h}{2}g_0\frac{1}{h^2}(f_1-2f_0+f_{-1})-\frac{h}{2}g_3\frac{1}{h^2}(f_4-2f_3+f_2)\\
+    &\qquad\ +\frac{1}{h}\left(\frac{1}{2}f_0g_{-1}-f_0g_0-\frac{1}{2}f_0g_1+f_1g_0+f_2g_3-\frac{1}{2}f_3g_2-f_3g_3+\frac{1}{2}f_3g_4\right)\\
+    &= \langle \delta_{xx}f,g\rangle_\mathcal{D}'+\frac{1}{h}\Big( -\frac{1}{2}f_1g_0+f_0g_0-\frac{1}{2}f_{-1}g_0-\frac{1}{2}f_4g_3+f_3g_3-\frac{1}{2}f_2g_3\\
+    &\qquad\ +\frac{1}{2}f_0g_{-1}-f_0g_0-\frac{1}{2}f_0g_1+f_1g_0+f_2g_3-\frac{1}{2}f_3g_2-f_3g_3+\frac{1}{2}f_3g_4\Big)\\
+    &= \langle \delta_{xx}f,g\rangle_\mathcal{D}'+\frac{1}{2h}\Big(f_1g_0-f_{-1}g_0-f_4g_3+f_2g_3-f_0g_1+f_0g_{-1}-f_3g_2+f_3g_4\Big)\\
+    &= \langle \delta_{xx}f,g\rangle_\mathcal{D}'+\frac{1}{2h}(f_1-f_{-1})g_0 - \frac{1}{2h}(g_1-g_{-1})f_0+\frac{1}{2h}(g_4-g_2)f_3-\frac{1}{2h}(f_4-f_2)g_3\\
+    &= \langle \delta_{xx}f,g\rangle_\mathcal{D}'+ g_0\delta_{x\cdot}f_0 - f_0\delta_{x\cdot}g_0-g_3\delta_{x\cdot}f_3+f_3\delta_{x\cdot}g_3
+\end{aligned}
+\end{equation}
+which is identical to the identity presented in Problem 5.8 in \cite{Bilbao2009}. Note that the difference with the regular inner product is that the boundary terms contain a centered derivative rather than a non-centered one. 
+\section{Potential energy derivation}\label{app:potDeriv}
+Recalling Eq. \eqref{eq:potContEnergy} and disregarding the multiplication with $c^2$ for now, we set $f=\dtd\Psi$ and $g = (\mup S)(\dxp \Psi)$ and domain $\mathcal{D} \in [0,N]$ which yields
+\begin{align}
+    \langle f, \dxm g\rangle_\mathcal{D} = \sum_{l=0}^N hf_l\dxm g_l =&\  f_0(g_0-g_{-1}) + f_1(g_1-g_0) + \hdots f_N(g_N-g_{N-1}) \nonumber\\
+    =&\ - g_0(f_1-f_0) - g_1(f_2-f_1) - \hdots g_{N-1}(f_N-f_{N-1})  + f_Ng_N - f_0g_{-1}\nonumber\\
+    =&\  -\sum_{l=0}^{N-1}h\dxp f_lg_l + f_Ng_N - f_0g_{-1}\nonumber\\
+    =&\  -\langle\dxp f,  g\rangle_\mathcal{\underline{D}} + f_Ng_N - f_0g_{-1}\nonumber\\
+    &\nonumber \\
+    = &\ -\langle\dxp\dtd\Psi,(\mup S) \dxp\Psi\rangle_{\underline{\mathcal{D}}} + (\dtd\Psi_N)(\mup S_N)(\dxp\Psi_N) \nonumber\\
+    &\ \qquad\qquad\qquad- (\dtd\Psi_0)\underbrace{(\mup S_{-1})}_{(\mum S_0)}\underbrace{(\dxp\Psi_{-1})}_{(\dxm \Psi_0)}
+\end{align} 
+
+\subsection{..using the primed inner product}
+Again, using domain $\mathcal{D} \in [0, \hdots, N]$ and $N = 3$, we get
+\begin{equation}
+\begin{aligned}
+    \langle f, \dxm g\rangle_\mathcal{D}' &= \sum_{l=1}^{N-1} hf_l\dxm g_l + \frac{h}{2}f_0\dxm g_0 + \frac{h}{2}f_3\dxm g_3\\
+    &= \frac{h}{2}f_0\frac{1}{h}(g_0-g_{-1})+hf_1\frac{1}{h}(g_1-g_0)+ hf_2\frac{1}{h}(g_2-g_1)+ \frac{h}{2}f_3\frac{1}{h}(g_3-g_{2})\\
+    &= \frac{1}{2}f_0g_0-\frac{1}{2}f_0g_{-1}+f_1g_1-f_1g_0+f_2g_2-f_2g_1+\frac{1}{2}f_3g_3-\frac{1}{2}f_3g_2\\
+    &= -g_0(f_1-f_0) - \frac{1}{2}f_0g_0-g_1(f_2-f_1)-g_2(f_3-f_2) + \frac{1}{2}f_3g_2-\frac{1}{2}f_0g_{-1}+\frac{1}{2}f_3g_3\\
+    &= -\sum_{l=0}^{N-1}hg_l\dxp f_l - \frac{1}{2}f_0g_0-\frac{1}{2}f_0g_{-1}+\frac{1}{2}f_3g_3+\frac{1}{2}f_3g_2\\
+    &= -\langle \dxp f, g \rangle_{\underline{\mathcal{D}}}-f_0(\mum g_0)+f_3(\mum g_3)
+\end{aligned}
+    \end{equation}
+Then, filling in the $f=\dtd\Psi$ and $g = (\mup S)(\dxp \Psi)$ yields
+\begin{equation}
+    \begin{aligned}
+        &-\langle \dxp \dtd\Psi, (\mup S)(\dxp \Psi)\rangle_\mathcal{\underline{D}} - (\dtd\Psi_0^n)\mum\big((\mup S_0)(\dxp \Psi_0^n)\big) + (\dtd\Psi_N^n)\mum\big((\mup S_N)(\dxp \Psi_N^n)\big)\\
+        %\Longleftrightarrow \quad &-\langle \dxp \dtd\Psi, (\mup S)(\dxp \Psi)\rangle_\mathcal{\underline{D}}'- (\dtd\Psi_0^n)(\mu_{xx} S_0)(\delta_{x\cdot} \Psi_0^n) + (\dtd\Psi_N^n)(\mu_{xx} S_N)(\delta_{x\cdot} \Psi_N^n)   
+    \end{aligned}
+\end{equation}
+which is close (!) but unfortunately doesn't give us the right answer. 
+
+\subsection{(scratch that) ...using the more general weighed inner product! AKA solving Problem 9.5}
+The weighed inner product (as given in Eq. (5.38) in \cite{Bilbao2009}) for a domain $\mathcal{D} = $ is defined as
+\begin{equation}
+    \langle f,g \rangle_{\mathcal{D}}^{\epsilon_l, \epsilon_r}= \sum_{l = 1}^{N-1}hf_lg_l + \frac{\epsilon_l}{2}hf_0g_0 + \frac{\epsilon_r}{2}hf_Ng_N,
+\end{equation}
+where free parameters $\epsilon_l, \epsilon_r > 0$ `tune' the weighting of the boundaries.
+
+Recalling Eq. \eqref{eq:potContEnergy}, but now applying this inner product (with $f=\dtd\Psi$ and $g = S_{l+1/2}(\dxp\Psi)$) yields
+\begin{equation}
+    \begin{aligned}
+        \langle f,\dxm g \rangle_{\mathcal{D}}^{\epsilon_l,\epsilon_r} &= \sum_{l=1}^{N-1} h f_l\frac{1}{h}(g_l-g_{l-1}) + \frac{\epsilon_l}{2}hf_0\frac{1}{h}(g_0 - g_{-1})+ \frac{\epsilon_r}{2}hf_N\frac{1}{h}(g_N - g_{N-1})\\
+        &=f_1g_1-f_1g_0+f_2g_2-f_2g_1+\hdots+f_{N-1}g_{N-1}-f_{N-1}g_{N-2}\\
+        &\qquad+ \frac{\epsilon_l}{2}f_0(g_0 - g_{-1}) + \frac{\epsilon_r}{2}f_N(g_N-g_{N-1})\\
+        &= -g_0(f_1-f_0) - f_0g_0 - g_1(f_2-f_1) - \hdots - g_{N-1}(f_N - f_{N-1}) + f_Ng_{N-1}\\
+        &\qquad + \frac{\epsilon_l}{2}f_0(g_0 - g_{-1}) + \frac{\epsilon_r}{2}f_N(g_N-g_{N-1})\\
+        &= -\langle \dxp f, g\rangle_{\underline{\mathcal{D}}} - f_0g_0 + f_Ng_{N-1}+\frac{\epsilon_l}{2}f_0(g_0 - g_{-1}) + \frac{\epsilon_r}{2}f_N(g_N-g_{N-1}).
+    \end{aligned}
+\end{equation}
+Then filling in the definitions for $f$ and $g$ yields
+\begin{equation}
+    \begin{aligned}
+    &= -\langle \dxp \dtd\Psiln,\Sp (\dxp\Psiln)\rangle_{\underline{\mathcal{D}}}-(\dtd\Psi_0^n)\Big(S_{1/2}(\dxp\Psi_0^n)\Big) + (\dtd\Psi_N^n)\Big(S_{N-1/2}(\dxp\Psi_{N-1}^n)\Big)\\
+    & \qquad +\frac{\epsilon_l}{2}(\dtd\Psi_0^n)\Big(S_{1/2}(\dxp\Psi_0^n)-S_{-1/2}\underbrace{(\dxp\Psi_{-1}^n)}_{(\dxm\Psi_0^n)}\Big) + \frac{\epsilon_r}{2}(\dtd\Psi_{N}^n)\Big(S_{N+1/2}(\dxp\Psi_N^n) - S_{N-1/2}(\dxp \Psi_{N-1}^n)\Big)
+    \end{aligned}
+\end{equation}
 \end{document}
