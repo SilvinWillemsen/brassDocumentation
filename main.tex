@@ -192,7 +192,7 @@ Substituted into Eq. \eqref{eq:webstersUpdateEq} yields (Appendix \ref{app:nonCe
 \end{equation}
 
 \subsection{Energy}
-In continuous time, the rate of change of the energy of a PDE can be obtained by taking the inner product with the first-order time derivative of the state. Using state $\Psi$, this yields
+In continuous time, the rate of change of the energy of a PDE can be obtained by taking the inner product with the first-order time derivative of the state \SWcomment[Say something here about obtaining units of power ``in this case, this means to multiply with the first time-derivative of the state $\Psi$]. Using state $\Psi$, this yields
 \begin{equation}
     \frac{d\mathfrak{H}}{dt} = \langle \partial_t\Psi, \text{PDE} \rangle\quad \text{where} \quad \mathfrak{H} = \mathfrak{T} + \mathfrak{D},
 \end{equation}
@@ -228,11 +228,15 @@ We place $\Sbar$ as a square-root in the equation, so that we can rewrite it as 
 \begin{equation}
     \mathfrak{t} = \frac{1}{2}\lVert\sqrt{\bar S_l}\delta_{t-}\Psiln\rVert_\mathcal{D}^2
 \end{equation}
-just like Eq. (9.14) in \cite{Bilbao2009}. When the boundaries of the scheme are centered we need to use a primed inner product (Eq. (5.23) in \cite{Bilbao2009}) as Bilbao explains right below Eq. (5.28) in \cite{Bilbao2009}. However, in the spatially varying case (which we are dealing with here), a more general weighted inner product needs to be used, which for a domain $\mathcal{D} = [0,\hdots,N]$ is defined as (as given in Eq. (5.38) in \cite{Bilbao2009}) 
+just like Eq. (9.14) in \cite{Bilbao2009}. When the boundaries of the scheme are centered we need to use a primed inner product (Eq. (5.23) in \cite{Bilbao2009}) as Bilbao explains right below Eq. (5.28) in \cite{Bilbao2009}:
+\begin{equation}\label{eq:primedInnerProduct}
+    \langle f,g \rangle_{\mathcal{D}}'= \sum_{l = 1}^{N-1}hf_lg_l + \frac{h}{2}f_0g_0 + \frac{h}{2}f_Ng_N,
+\end{equation} 
+However, in the spatially varying case (which we are dealing with here), a more general weighted inner product needs to be used, which for a domain $\mathcal{D} = [0,\hdots,N]$ is defined as (as given in Eq. (5.38) in \cite{Bilbao2009}) 
 \begin{equation}\label{eq:weightedInnerProduct}
     \langle f,g \rangle_{\mathcal{D}}^{\epsilon_\text{l}, \epsilon_\text{r}}= \sum_{l = 1}^{N-1}hf_lg_l + \frac{\epsilon_\text{l}}{2}hf_0g_0 + \frac{\epsilon_\text{r}}{2}hf_Ng_N,
 \end{equation}
-where free parameters $\epsilon_\text{l}, \epsilon_\text{r} > 0$ `tune' the weighting of the boundaries. For the kinetic energy, we now have
+where free parameters $\epsilon_\text{l}, \epsilon_\text{r} > 0$ `tune' the weighting of the boundaries. If $\epsilon_\text{l} = \epsilon_\text{r} = 1$, Eq. \eqref{eq:weightedInnerProduct} reduces to the primed inner product from Eq. \eqref{eq:primedInnerProduct}. For the kinetic energy, we now have
 \begin{equation}
     \mathfrak{t} = \frac{1}{2}\left(\lVert\sqrt{\bar S_l}\delta_{t-}\Psiln \rVert_\mathcal{D}^{\epsilon_\text{l}, \epsilon_\text{r}}\right)^2,
 \end{equation}
@@ -374,6 +378,119 @@ When written in the form found in Eq. \eqref{eq:radiatingEnergyForm} we obtain
 % \begin{equation}
 %     \mathfrak{?}_\text{b} = -(\dtd\Psi_N^n)(\dxm\Psi_N^n).
 % \end{equation}]
+\section{First-order systems}
+Until now we have looked at the second-order PDE shown in Eq. \eqref{eq:webstersPDE}. However, according to \cite{Harrison2018}, (apart from being useful for a ``simpler discussion'' of boundary conditions) a system of first-order PDEs equivalent to Webster's equation was shown to be more accurate \cite{Torin2015}. Furthermore, the state of the art \cite{Harrison2018, Harrison2016} works with these schemes and allow to more easily add viscothermal losses.
+
+The system is defined as follows:
+\begin{subequations}\label{eq:firstOrderSystem}
+\begin{align}
+    \frac{S}{\rho c^2}\partial_t p &= -\partial_x(Sv)\label{eq:discPressure}\\
+    \rho\partial_tv &= -\partial_xp\label{eq:discVelocity}
+\end{align}
+\end{subequations}
+where pressure $p = \rho\partial_t \Psi$ (N/m$^2$) and particle velocity $v = -\partial_x\Psi$ (m/s) with air density $\rho$. Indeed it can be shown by substituting these definitions into Eq. \eqref{eq:discPressure}, Webster's equation is obtained again:
+\begin{equation}
+  \nonumber
+        \frac{S}{\rho c^2}\partial_t(\rho \partial_t\psi) = -\partial_x(S(-\partial_x\Psi))\quad \Longrightarrow \quad S\partial_t^2\psi = c^2\partial_x(S\partial_x\Psi).
+\end{equation}
+\subsection{Discretisation}
+As done in \cite{Harrison2018}, it is useful to place either $p$ or $v$ on an interleaved grid; both in space and time. Following Harrison, we place $v$ on this interleaved grid. Accordingly, system \eqref{eq:firstOrderSystem} is discretised as
+\begin{subequations}
+    \begin{align}
+        \frac{\bar S_l}{\rho c^2}\delta_{t+}p_l^n &= -\delta_{x-}(S_{l+1/2}v_{l+1/2}^{n+1/2}),\\
+        \rho \delta_{t-}v_{l+1/2}^{n+1/2}&=-\delta_{x+}p_l^n,
+    \end{align}
+\end{subequations}
+after which the update schemes become
+\begin{subequations}
+    \begin{align}
+        p_l^{n+1} &= p_l^n - \frac{\rho \lambda}{\bar{S}_l}(S_{l+1/2}v_{l+1/2}^{n+1/2}-S_{l-1/2}v_{l-1/2}^{n-1/2}),\\
+        v_{l+1/2}^{n+1/2} &= v_{l+1/2}^{n-1/2}-\frac{\lambda}{\rho c}(p_{l+1}^n - p_l^n),
+    \end{align}
+\end{subequations}
+where (again) $\lambda = ck/h$.
+
+\subsection{Boundary Conditions}\label{sec:boundariesFirstOrder}
+In the first-order PDE case, the boundary conditions are defined as follows
+\begin{align*}
+    p_0^n &= 0, & p_N^n &= 0, & &\text{(Dirichlet),}\\
+    \mu_{x-}(S_{1/2}v_{1/2}^n) &= 0, & \mu_{x+}(S_{N-1/2}v_{N-1/2}^n) &= 0, & &\text{(Neumann)},
+\end{align*}
+for all $n$.
+
+\subsection{Energy}
+For the energy analysis of the first-order system presented above, \cite{Harrison2018} is followed. Instead of taking an inner product with $\delta_{t\cdot}\Psi$ we take an inner product with $\mu_{t+}p$ instead. Using the primed inner product from Eq. \eqref{eq:primedInnerProduct}\footnote{We can use the primed rather than the weighted inner product here as the boundary conditions are defined as found in Section \ref{sec:boundariesFirstOrder}.} for Eq. \eqref{eq:discPressure} and after taking all terms to the left-hand side, this yields
+\begin{equation}\label{eq:firstOrderPrimed}
+    \delta_{t+}\mathfrak{h} = \frac{1}{\rho c^2}\langle \mu_{t+}p_l^n, \Sbar \delta_{t+}p_l^n \rangle_{\mathcal{D}}' +\langle \mu_{t+}p_l^n, \dxm(S_{l+1/2}v_{l+1/2}^{n+1/2})\rangle_{\mathcal{D}}'.
+\end{equation}
+From now on, the following superscripts and subscripts will be assumed unless denoted otherwise: $n$ and $l$ for $p$, $l$ for $\bar S$, $l+1/2$ for $S$ and $l+1/2$ and $n+1/2$ for $v$. After integration by parts of the last term, Eq.  \eqref{eq:firstOrderPrimed} becomes (also see App. \ref{app:primed})
+\begin{align}\label{eq:discEnergyFirstOrder}
+    \delta_{t+}\mathfrak{h} &= \frac{1}{\rho c^2}\langle \mu_{t+}p, \bar S \delta_{t+}p \rangle_{\mathcal{D}}' -\langle \mu_{t+}\dxp p, Sv\rangle_{\underline{\mathcal{D}}} + \mathfrak{h}_\text{b} \quad \text{where}\\
+    \mathfrak{h}_\text{b} &= (\mu_{t+}p_N^n)\mu_{x+}(S_{N-1/2}v_{N-1/2}^n)-(\mu_{t+}p_0^n)\mu_{x-}(S_{1/2}v_{1/2}^n).\nonumber
+\end{align}
+Then, Eq. \eqref{eq:discVelocity} can be substituted into \eqref{eq:discEnergyFirstOrder} to get
+\begin{align}
+    \delta_{t+}\mathfrak{h} &= \frac{1}{\rho c^2}\langle \mu_{t+}p, \bar S \delta_{t+}p \rangle_{\mathcal{D}}' -\langle \mu_{t+}(-\rho\delta_{t-}v), Sv\rangle_{\underline{\mathcal{D}}} + \mathfrak{h}_\text{b}\\
+    &= \frac{1}{\rho c^2}\langle \mu_{t+}p, \bar S \delta_{t+}p \rangle_{\mathcal{D}}' + \rho \langle \delta_{t\cdot}v, Sv\rangle_{\underline{\mathcal{D}}} + \mathfrak{h}_\text{b}.
+\end{align}
+Then we can use the following identity for the first term
+\begin{equation}
+    \langle\delta_{t+}u, \mu_{t+}u\rangle_\mathcal{D} = \delta_{t+}\left(\frac{1}{2}\lVert u\rVert^2_\mathcal{D}\right)
+\end{equation}
+and the following identity for the second term
+\begin{equation}
+    \langle\delta_{t\cdot}u, u\rangle_\mathcal{D} = \delta_{t+}\left(\frac{1}{2}\langle u,e_{t-}u\rangle_\mathcal{D}\right)
+\end{equation}
+to get
+\begin{equation}
+    \begin{gathered}
+        \mathfrak{h} = \mathfrak{t} + \mathfrak{v}\quad \text{where}\\
+       \mathfrak{t} = \frac{1}{2\rho c^2}\left(\lVert\sqrt{\bar S }p\rVert'_\mathcal{D}\right)^2\quad \text{and} \quad \mathfrak{v} = \frac{\rho}{2}\langle Sv, e_{t-}v\rangle_{\underline{\mathcal{D}}}.
+    \end{gathered}
+\end{equation}
+
+\subsection{Viscothermal Losses}
+Until now, only lossless tubes have been considered, but in reality, losses due to viscothermal effects occur. In frequency domain, the PDEs in \eqref{eq:firstOrderSystem} can be written as  
+\begin{subequations}\label{eq:firstOrderSystemFreq}
+    \begin{align}
+        SY\hat p &= -\partial_x(S\hat v)\\
+        Z\hat v &= -\partial_x \hat p
+    \end{align}    
+\end{subequations}
+where the shunt admittance $Y$ and series impedance $Z$, collectively called \textit{immitances}, are defined as
+\begin{equation}\label{eq:fullImmitances}
+    Y = \frac{j\omega}{\rho c^2}(1+(\gamma-1)F_\text{t}),\quad \text{and} \quad Z = \frac{ j\omega\rho }{1-F_\text{v}},
+\end{equation}
+with ratio of specific heats $\gamma$ and
+\begin{equation}
+    F_\text{t} = \phi \left(\sqrt{-j}r_\text{t}\right), \quad F_\text{v} = \phi\left(\sqrt{-j}r_\text{v}\right), \quad \phi(\xi) = \frac{2}{\xi}\frac{J_1(\xi)}{J_0(\xi)}\ ,
+\end{equation}
+where $J_0$ and $J_1$ are Bessel functions of the zeroth and first order respectively.
+Furthermore, thermal and viscous boundary layer thicknesses are defined as
+\begin{equation}
+    r_\text{t} = \nu r_\text{v}, \quad r_\text{v} = r\sqrt{\frac{\rho \omega}{\eta}}
+\end{equation}
+with root of Prandtl number $\nu$ radius $r$ and shear viscosity $\eta$.
+
+It is useful to divide these into a lossless and a lossy part. We can define\footnote{...by rewriting the impedance from Eq. \eqref{eq:fullImmitances} as $
+     Z = j\omega\rho \left(\frac{1 - F_\text{v} + F_\text{v}}{1-F_\text{v}}\right) = j \omega\rho  \left(1 + \frac{F_\text{v}}{1-F_\text{v}}\right)
+$.}
+\begin{equation}\label{eq:lossyLosslessImmitances}
+    Y = Y_0 + Y_\text{t}, \quad Z = Z_0 + Z_\text{t},
+\end{equation}
+with lossless immitances
+\begin{equation}
+   Y_0 = \frac{j\omega}{\rho c^2}, \quad \text{and} \quad Z_0 = j\omega\rho,
+\end{equation}
+and lossy immitances
+\begin{equation}
+Y_\text{t} = \frac{j\omega}{\rho c^2} (\gamma - 1)F_\text{t},\quad Z_\text{t} = j \omega\rho  \frac{F_\text{v}}{1-F_\text{v}}.
+\end{equation}
+where $Y_\text{t}$ is due to thermal effects and $Z_\text{v}$ is due to viscous effects. 
+
+Only considering the lossless case for now ($Y_\text{t} = Z_\text{t} = 0$), we can see that when using Eq. \eqref{eq:lossyLosslessImmitances} in Eqs. \eqref{eq:firstOrderSystemFreq} the latter reduces to the PDEs in \eqref{eq:firstOrderSystem} (knowing that a multiplication with $j\omega$ in the frequency domain is a first-order derivative (see Appendix \ref{app:freqDomDeriv})).
+
+\section{Lip excitation}
 
 \section{Time-varying System}
 The PDE for the time-varying version of Webster's equation is (Eq. (9.23) in \cite{Bilbao2009})
@@ -646,7 +763,7 @@ Recalling Eq. \eqref{eq:potContEnergy} and disregarding the multiplication with 
     &\ \qquad\qquad\qquad- (\dtd\Psi_0)\underbrace{(\mup S_{-1})}_{(\mum S_0)}\underbrace{(\dxp\Psi_{-1})}_{(\dxm \Psi_0)}
 \end{align} 
 
-\subsection{..using the primed inner product}
+\subsection{..using the primed inner product}\label{app:primed}
 Again, using domain $\mathcal{D} \in [0, \hdots, N]$ and $N = 3$, we get
 \begin{equation}
 \begin{aligned}
@@ -710,4 +827,7 @@ The same can be done for $\mathfrak{b}_\text{l}$ with $\epsilon_\text{l} = S_{1/
 \begin{equation}
     \mathfrak{b}_\text{l} = c^2(\dtd\Psi_0^n)S_{1/2}\left(2-\epsilon_\text{l}\right)(\delta_{x\cdot}\Psi_0^n)
 \end{equation}
+
+\section{Derivatives in the frequency domain}
+
 \end{document}
