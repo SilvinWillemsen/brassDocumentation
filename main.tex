@@ -11,7 +11,8 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
-
+\usepackage{cases}
+\usepackage{tikz}
 \usepackage{xcolor}
 \def\SBcomment[#1]{\textcolor{red}{#1}}
 \def\SWcomment[#1]{\textcolor{blue}{#1}}
@@ -384,28 +385,28 @@ Until now we have looked at the second-order PDE shown in Eq. \eqref{eq:websters
 The system is defined as follows:
 \begin{subequations}\label{eq:firstOrderSystem}
 \begin{align}
-    \frac{S}{\rho c^2}\partial_t p &= -\partial_x(Sv)\label{eq:discPressure}\\
-    \rho\partial_tv &= -\partial_xp\label{eq:discVelocity}
+    \frac{S}{\rho_0 c^2}\partial_t p &= -\partial_x(Sv)\label{eq:discPressure}\\
+    \rho_0\partial_tv &= -\partial_xp\label{eq:discVelocity}
 \end{align}
 \end{subequations}
-where pressure $p = \rho\partial_t \Psi$ (N/m$^2$) and particle velocity $v = -\partial_x\Psi$ (m/s) with air density $\rho$. Indeed it can be shown by substituting these definitions into Eq. \eqref{eq:discPressure}, Webster's equation is obtained again:
+where pressure $p = p(x,t) = \rho_0\partial_t \Psi$ (N/m$^2$) and particle velocity $v = v(x,t) = -\partial_x\Psi$ (m/s) with air density $\rho_0$. Indeed it can be shown by substituting these definitions into Eq. \eqref{eq:discPressure}, Webster's equation is obtained again:
 \begin{equation}
   \nonumber
-        \frac{S}{\rho c^2}\partial_t(\rho \partial_t\psi) = -\partial_x(S(-\partial_x\Psi))\quad \Longrightarrow \quad S\partial_t^2\psi = c^2\partial_x(S\partial_x\Psi).
+        \frac{S}{\rho_0 c^2}\partial_t(\rho_0 \partial_t\psi) = -\partial_x(S(-\partial_x\Psi))\quad \Longrightarrow \quad S\partial_t^2\psi = c^2\partial_x(S\partial_x\Psi).
 \end{equation}
 \subsection{Discretisation}
 As done in \cite{Harrison2018}, it is useful to place either $p$ or $v$ on an interleaved grid; both in space and time. Following Harrison, we place $v$ on this interleaved grid. Accordingly, system \eqref{eq:firstOrderSystem} is discretised as
 \begin{subequations}
     \begin{align}
-        \frac{\bar S_l}{\rho c^2}\delta_{t+}p_l^n &= -\delta_{x-}(S_{l+1/2}v_{l+1/2}^{n+1/2}),\\
-        \rho \delta_{t-}v_{l+1/2}^{n+1/2}&=-\delta_{x+}p_l^n,
+        \frac{\bar S_l}{\rho_0 c^2}\delta_{t+}p_l^n &= -\delta_{x-}(S_{l+1/2}v_{l+1/2}^{n+1/2}),\\
+        \rho_0 \delta_{t-}v_{l+1/2}^{n+1/2}&=-\delta_{x+}p_l^n,
     \end{align}
 \end{subequations}
 after which the update schemes become
 \begin{subequations}
     \begin{align}
         p_l^{n+1} &= p_l^n - \frac{\rho \lambda}{\bar{S}_l}(S_{l+1/2}v_{l+1/2}^{n+1/2}-S_{l-1/2}v_{l-1/2}^{n-1/2}),\\
-        v_{l+1/2}^{n+1/2} &= v_{l+1/2}^{n-1/2}-\frac{\lambda}{\rho c}(p_{l+1}^n - p_l^n),
+        v_{l+1/2}^{n+1/2} &= v_{l+1/2}^{n-1/2}-\frac{\lambda}{\rho_0 c}(p_{l+1}^n - p_l^n),
     \end{align}
 \end{subequations}
 where (again) $\lambda = ck/h$.
@@ -421,17 +422,17 @@ for all $n$.
 \subsection{Energy}
 For the energy analysis of the first-order system presented above, \cite{Harrison2018} is followed. Instead of taking an inner product with $\delta_{t\cdot}\Psi$ we take an inner product with $\mu_{t+}p$ instead. Using the primed inner product from Eq. \eqref{eq:primedInnerProduct}\footnote{We can use the primed rather than the weighted inner product here as the boundary conditions are defined as found in Section \ref{sec:boundariesFirstOrder}.} for Eq. \eqref{eq:discPressure} and after taking all terms to the left-hand side, this yields
 \begin{equation}\label{eq:firstOrderPrimed}
-    \delta_{t+}\mathfrak{h} = \frac{1}{\rho c^2}\langle \mu_{t+}p_l^n, \Sbar \delta_{t+}p_l^n \rangle_{\mathcal{D}}' +\langle \mu_{t+}p_l^n, \dxm(S_{l+1/2}v_{l+1/2}^{n+1/2})\rangle_{\mathcal{D}}'.
+    \delta_{t+}\mathfrak{h} = \frac{1}{\rho_0 c^2}\langle \mu_{t+}p_l^n, \Sbar \delta_{t+}p_l^n \rangle_{\mathcal{D}}' +\langle \mu_{t+}p_l^n, \dxm(S_{l+1/2}v_{l+1/2}^{n+1/2})\rangle_{\mathcal{D}}'.
 \end{equation}
 From now on, the following superscripts and subscripts will be assumed unless denoted otherwise: $n$ and $l$ for $p$, $l$ for $\bar S$, $l+1/2$ for $S$ and $l+1/2$ and $n+1/2$ for $v$. After integration by parts of the last term, Eq.  \eqref{eq:firstOrderPrimed} becomes (also see App. \ref{app:primed})
 \begin{align}\label{eq:discEnergyFirstOrder}
-    \delta_{t+}\mathfrak{h} &= \frac{1}{\rho c^2}\langle \mu_{t+}p, \bar S \delta_{t+}p \rangle_{\mathcal{D}}' -\langle \mu_{t+}\dxp p, Sv\rangle_{\underline{\mathcal{D}}} + \mathfrak{h}_\text{b} \quad \text{where}\\
+    \delta_{t+}\mathfrak{h} &= \frac{1}{\rho_0 c^2}\langle \mu_{t+}p, \bar S \delta_{t+}p \rangle_{\mathcal{D}}' -\langle \mu_{t+}\dxp p, Sv\rangle_{\underline{\mathcal{D}}} + \mathfrak{h}_\text{b} \quad \text{where}\\
     \mathfrak{h}_\text{b} &= (\mu_{t+}p_N^n)\mu_{x+}(S_{N-1/2}v_{N-1/2}^n)-(\mu_{t+}p_0^n)\mu_{x-}(S_{1/2}v_{1/2}^n).\nonumber
 \end{align}
 Then, Eq. \eqref{eq:discVelocity} can be substituted into \eqref{eq:discEnergyFirstOrder} to get
 \begin{align}
-    \delta_{t+}\mathfrak{h} &= \frac{1}{\rho c^2}\langle \mu_{t+}p, \bar S \delta_{t+}p \rangle_{\mathcal{D}}' -\langle \mu_{t+}(-\rho\delta_{t-}v), Sv\rangle_{\underline{\mathcal{D}}} + \mathfrak{h}_\text{b}\\
-    &= \frac{1}{\rho c^2}\langle \mu_{t+}p, \bar S \delta_{t+}p \rangle_{\mathcal{D}}' + \rho \langle \delta_{t\cdot}v, Sv\rangle_{\underline{\mathcal{D}}} + \mathfrak{h}_\text{b}.
+    \delta_{t+}\mathfrak{h} &= \frac{1}{\rho_0 c^2}\langle \mu_{t+}p, \bar S \delta_{t+}p \rangle_{\mathcal{D}}' -\langle \mu_{t+}(-\rho_0\delta_{t-}v), Sv\rangle_{\underline{\mathcal{D}}} + \mathfrak{h}_\text{b}\\
+    &= \frac{1}{\rho_0 c^2}\langle \mu_{t+}p, \bar S \delta_{t+}p \rangle_{\mathcal{D}}' + \rho_0 \langle \delta_{t\cdot}v, Sv\rangle_{\underline{\mathcal{D}}} + \mathfrak{h}_\text{b}.
 \end{align}
 Then we can use the following identity for the first term
 \begin{equation}
@@ -445,7 +446,7 @@ to get
 \begin{equation}
     \begin{gathered}
         \mathfrak{h} = \mathfrak{t} + \mathfrak{v}\quad \text{where}\\
-       \mathfrak{t} = \frac{1}{2\rho c^2}\left(\lVert\sqrt{\bar S }p\rVert'_\mathcal{D}\right)^2\quad \text{and} \quad \mathfrak{v} = \frac{\rho}{2}\langle Sv, e_{t-}v\rangle_{\underline{\mathcal{D}}}.
+       \mathfrak{t} = \frac{1}{2\rho_0 c^2}\left(\lVert\sqrt{\bar S }p\rVert'_\mathcal{D}\right)^2\quad \text{and} \quad \mathfrak{v} = \frac{\rho_0}{2}\langle Sv, e_{t-}v\rangle_{\underline{\mathcal{D}}}.
     \end{gathered}
 \end{equation}
 
@@ -459,7 +460,7 @@ Until now, only lossless tubes have been considered, but in reality, losses due 
 \end{subequations}
 where the shunt admittance $Y$ and series impedance $Z$, collectively called \textit{immitances}, are defined as
 \begin{equation}\label{eq:fullImmitances}
-    Y = \frac{j\omega}{\rho c^2}(1+(\gamma-1)F_\text{t}),\quad \text{and} \quad Z = \frac{ j\omega\rho }{1-F_\text{v}},
+    Y = \frac{j\omega}{\rho_0 c^2}(1+(\gamma-1)F_\text{t}),\quad \text{and} \quad Z = \frac{ j\omega\rho_0 }{1-F_\text{v}},
 \end{equation}
 with ratio of specific heats $\gamma$ and
 \begin{equation}
@@ -468,34 +469,149 @@ with ratio of specific heats $\gamma$ and
 where $J_0$ and $J_1$ are Bessel functions of the zeroth and first order respectively.
 Furthermore, thermal and viscous boundary layer thicknesses are defined as
 \begin{equation}
-    r_\text{t} = \nu r_\text{v}, \quad r_\text{v} = r\sqrt{\frac{\rho \omega}{\eta}}
+    r_\text{t} = \nu r_\text{v}, \quad r_\text{v} = r\sqrt{\frac{\rho_0 \omega}{\eta}}
 \end{equation}
 with root of Prandtl number $\nu$ radius $r$ and shear viscosity $\eta$.
 
 It is useful to divide these into a lossless and a lossy part. We can define\footnote{...by rewriting the impedance from Eq. \eqref{eq:fullImmitances} as $
-     Z = j\omega\rho \left(\frac{1 - F_\text{v} + F_\text{v}}{1-F_\text{v}}\right) = j \omega\rho  \left(1 + \frac{F_\text{v}}{1-F_\text{v}}\right)
+     Z = j\omega\rho_0 \left(\frac{1 - F_\text{v} + F_\text{v}}{1-F_\text{v}}\right) = j \omega\rho_0  \left(1 + \frac{F_\text{v}}{1-F_\text{v}}\right)
 $.}
 \begin{equation}\label{eq:lossyLosslessImmitances}
     Y = Y_0 + Y_\text{t}, \quad Z = Z_0 + Z_\text{t},
 \end{equation}
 with lossless immitances
 \begin{equation}
-   Y_0 = \frac{j\omega}{\rho c^2}, \quad \text{and} \quad Z_0 = j\omega\rho,
+   Y_0 = \frac{j\omega}{\rho_0 c^2}, \quad \text{and} \quad Z_0 = j\omega\rho_0,
 \end{equation}
 and lossy immitances
 \begin{equation}
-Y_\text{t} = \frac{j\omega}{\rho c^2} (\gamma - 1)F_\text{t},\quad Z_\text{t} = j \omega\rho  \frac{F_\text{v}}{1-F_\text{v}}.
+Y_\text{t} = \frac{j\omega}{\rho_0 c^2} (\gamma - 1)F_\text{t},\quad Z_\text{t} = j \omega\rho_0  \frac{F_\text{v}}{1-F_\text{v}}.
 \end{equation}
 where $Y_\text{t}$ is due to thermal effects and $Z_\text{v}$ is due to viscous effects. 
 
 Only considering the lossless case for now ($Y_\text{t} = Z_\text{t} = 0$), we can see that when using Eq. \eqref{eq:lossyLosslessImmitances} in Eqs. \eqref{eq:firstOrderSystemFreq} the latter reduces to the PDEs in \eqref{eq:firstOrderSystem} (knowing that a multiplication with $j\omega$ in the frequency domain is a first-order derivative (see Appendix \ref{app:freqDomDeriv})).
 
 \section{Lip excitation}
+To excite the system we can use a pulse train. A more physical approach, that is bidirectional, is to model a lip as a mass-spring system that interacts with the left boundary of the tube (see Figure \ref{fig:lipSystem}). Following \cite{Harrison2018} we get
+\begin{equation}
+    M\frac{d^2y}{dt^2} = -M \omega_0^2 y - M \sigma \frac{dy}{dt} + S_\text{r}\Delta p,
+\end{equation}
+with displacement of the lip reed from equilibrium $y = y(t)$, lip-mass $M$ (kg) natural angular frequency of the lip reed $\omega_0 = \sqrt{K/M}$ (rad/s), spring stiffness of the lip $K$ (N/m), loss parameter $\sigma$ (\SWcomment[s$^{-1}$]), effective surface area of the lip $S_\text{r}$ (m$^2$) and 
+\begin{equation}
+    \Delta p = P_\text{m} - p(0,t)
+\end{equation}
+is the difference between the pressure in the mouth $P_\text{m}$ (\SWcomment[kPa]) and the pressure in the mouth piece $p(t,0)$ (\SWcomment[kPa]). 
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}
+    
+    \def\radius{6}; % Radius of the string (>2!)
+    \pgfmathsetmacro{\reps}{3}; % How may back-and-forths in the drawing of the springs
+    \def\bowSpacing{0.2};
+    \def\drawingSpacing{1.5}
+    \def\bowWidth{5};
+    
+    \def\woodWidth{1}; %>0.3
+    \def\massWidth{3};
+    \def\bridgeHeight{3};
+    \def\bridgeWidth{4};
+    \def\cornerRadius{0.15};
+    \def\stringWidth{0.2};
+    \pgfmathsetmacro{\tinyRadius}{\stringWidth*0.1};
+    \pgfmathsetmacro{\stringWidthMinTinyRad}{((\stringWidth-(2*\tinyRadius)))*0.5};
+    
+    %top
+    \draw[-] (-3, 2) -- (3, 2) node[below, midway] (top) {};
+    \draw[-] (-2, 3) -- (4, 3) node[below, midway] (top) {};
+    \draw[-] (-3, 2) -- (-2, 3) node[below, midway] (top) {};
+    \draw[-] (4, 3) -- (3, 2) node[below, midway] (top) {};
+
+    %bottom
+    \draw[-] (-3, -2) -- (3, -2) node[below, midway] (bottom) {};
+    \draw[-] (-2, -1) -- (4, -1) node[below, midway] (bottom) {};
+    \draw[-] (-3, -2) -- (-2, -1) node[below, midway] (top) {};
+    \draw[-] (4, -1) -- (3, -2) node[below, midway] (top) {};
+
+    % draw mass
+    \node at (0,0) [rectangle,draw, minimum height=1cm,minimum width= \massWidth cm] (M) {$M$};
+
+    \draw[-] (-0.5 * \massWidth, 0.5) -- (-0.5, 0.5 * \massWidth) node[] () {};
+
+    \draw[-] (0.5 * \massWidth, 0.5) -- (2.5, 0.5 * \massWidth) node[] () {};
+
+    \draw[-] (-0.5, 0.5 * \massWidth) -- (2.5, 0.5 * \massWidth) node[] () {};
+
+    \draw[-] (2.5, 0.5) -- (2.5, 0.5 * \massWidth) node[] () {};
+
+    \draw[-] (2.5, 0.5) -- (2.5, 0.5 * \massWidth) node[] () {};
+
+    \draw[-] (0.5 * \massWidth, -0.5) -- (2.5, 0.5) node[] () {};
+
+    \node[rotate = 0] at (0.5, 1) (Sr) {$S_\text{r}$};
+
+    % draw spring
+    \filldraw[gray] (-0.5, 2.5) circle (1pt) node[anchor=center](topSpring){};    
+    \draw[-, color = gray] (-0.5, 2.5) -- (-0.5, 2.3);
+    \draw[-, color = gray] (-0.5, 2.3) -- (-0.75, 2.2);
+    %switched these around because of the color
+    \draw[-] (-0.25, 2.02) -- (-0.75, 1.84);
+    \draw[-, color = gray] (-0.75, 2.2) -- (-0.25, 2.02);
+    \draw[-] (-0.75, 1.84) -- (-0.25, 1.66);
+    \draw[-] (-0.25, 1.66) -- (-0.75, 1.52);
+    \draw[-] (-0.75, 1.52) -- (-0.25, 1.3);
+    \draw[-] (-0.25, 1.3) -- (-0.5, 1.2);
+    \draw[-] (-0.5, 1.2) -- (-0.5, 1.0);
+    \filldraw[black] (-0.5, 1.0) circle (1pt) node[anchor=center](bottomSpring){};    
+    \node at (-1, 1.75) (K) {$K$};
+    
+    % draw dashpot
+    \filldraw[gray] (1.5, 2.5) circle (1pt) node[anchor=center](topDashPot){};
+    \draw[-, color = gray] (1.5, 2.5) -- (1.5, 2);
+    \draw[-] (1.5, 2) -- (1.5, 1.4);
+
+    \draw[-] (1.3, 1.4) -- (1.7, 1.4);
+
+    \draw[-] (1.25, 1.7) -- (1.25, 1.35);
+    \draw[-] (1.75, 1.35) -- (1.75, 1.7);
+
+    \draw[-] (1.25, 1.35) -- (1.75, 1.35);
+    \draw[-] (1.5, 1.35) -- (1.5, 1.0);
+
+    \filldraw[black] (1.5, 1.0) circle (1pt) node[anchor=center](bottomDashpot){};    
+
+    \node at (1.0, 1.75) (sigma) {$\sigma$};
+
+    \end{tikzpicture}
+    \caption{Lipsystem}
+    \label{fig:bridgeDiagram}
+\end{figure}
+This pressure difference causes a volume flow velocity following the Bernoulli equation
+\begin{equation}
+    U_\text{B} = w[y + H_0]_+\text{sgn}(\Delta p) \sqrt{\frac{2|\Delta p|}{\rho_0}},
+\end{equation}
+with effective lip-reed width $w$ (m), static equilibrium separation $H_0$ (m) and $[x]_+ = 0.5 (x + |x|)$ describes the ``positive part of`''. Notice that when $y + H_0 \leq 0$, the lips are closed and the volume velocity $U_\text{B}$ is 0. Another volume flow is generated by the lip reed itself according to
+\begin{equation}
+    U_\text{r} = S_\text{r} \frac{dy}{dt}.
+\end{equation}
+Assuming that the volume flow velocity is conserved we define the total air volume entering the system is defined as
+\begin{equation}
+    S(0)v(0,t) = U_\text{B}(t) + U_\text{r}(t).
+\end{equation}
+
+\subsection{Discrete Time}
+Placing $y$, $\Delta p$, and thereby $U_\text{B}$ and $U_\text{r}$ on the interleaved temporal grid (but on the non-interleaved spatial grid), we discretise the equations above to get the following system
+\begin{subnumcases}{\label{eq:discreteLipSystem}}
+    M\delta_{tt}y^{n+1/2} & $= -M\omega_0^2\mu_{t\cdot}y^{n+1/2}-M\sigma\delta_{t\cdot}y^{n+1/2} + S_\text{r}\Delta p^{n+1/2}$\\
+    \Delta p^{n+1/2} & $= P_\text{m} - \mu_{t+}p_0^n$\\
+    U_\text{B}^{n+1/2} & $= w[y^{n+1/2}+H_0]_+\text{sgn}(\Delta p^{n+1/2})\sqrt{\frac{2|\Delta p^{n+1/2}|}{\rho_0}}$\\
+    U_\text{r}^{n+1/2} & $= S_\text{r}\delta_{t\cdot}y^{n+1/2}$\\
+    \mu_{x-}(S_{1/2}^{n+1/2}v_{1/2}^{n+1/2}) &$= U_\text{B}^{n+1/2} + U_{r}^{n+1/2}$
+\end{subnumcases}
 
 \section{Time-varying System}
 The PDE for the time-varying version of Webster's equation is (Eq. (9.23) in \cite{Bilbao2009})
 \begin{equation}
-     \partial_t(S\partial_t\Psi) = c^2 \partial_x(S\partial_x\Psi)
+     \partial_t(S\partial_t\Psi) = c^2 \partial_x(S\partial_x\Psi).
 \end{equation}
 which can be discretised as (right below Eq. (9.23) in \cite{Bilbao2009})
 \begin{equation}

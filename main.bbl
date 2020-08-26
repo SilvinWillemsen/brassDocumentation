@@ -1,0 +1,49 @@
+\begin{thebibliography}{1}
+
+\bibitem{Atig2004}
+M.~Atig, J.-P. Dalmont, and J.~Gilbert.
+\newblock Termination impedance of open-ended cylindrical tubes at high sound
+  pressure level.
+\newblock {\em Comptes Rendus M\'ecanique}, 332:299--304, 2004.
+
+\bibitem{Bilbao2009}
+Stefan Bilbao.
+\newblock {\em Numerical Sound Synthesis}.
+\newblock John Wiley \& Sons, 2009.
+
+\bibitem{Bilbao2013}
+Stefan Bilbao and John Chick.
+\newblock Finite difference time domain simulation for the brass instrument
+  bore.
+\newblock {\em The Journal of the Acoustical Society of America}, 2013.
+
+\bibitem{Bilbao2018}
+Stefan Bilbao, Brian Hamilton, R.~Harrison, and A~Torin.
+\newblock Finite-difference schemes in musical acoustics: A tutorial.
+\newblock {\em Springer handbook of systematic musicology}, 2018.
+
+\bibitem{Harrison2016}
+Stefan Bilbao and Reginald Harrison.
+\newblock Passive time-domain numerical models of viscothermal wave propagation
+  in acoustic tubes of variable cross section.
+\newblock {\em Journal of the Acoustical Society of America}, 2016.
+
+\bibitem{Chen2002}
+Yang~Quan Chen and Kevin~L. Moore.
+\newblock Discretization schemes for fractional-order differentiators and
+  integrators.
+\newblock {\em {IEEE} Transactions on Circuits and Systems}, 2002.
+
+\bibitem{Harrison2018}
+Reginald~Langford Harrison-Harsley.
+\newblock {\em Physical Modelling of Brass Instruments using Finite-Difference
+  Time-Domain Methods}.
+\newblock PhD thesis, University of Edinburgh, 2018.
+
+\bibitem{Torin2015}
+Alberto Torin.
+\newblock {\em Percussion Instrument Modelling in 3D: Sound Synthesis Through
+  Time Domain Numerical Simulation}.
+\newblock PhD thesis, University of Edinburgh, 2015.
+
+\end{thebibliography}
