@@ -394,10 +394,14 @@ The system is defined as follows:
     \rho_0\partial_tv &= -\partial_xp\label{eq:discVelocity}
 \end{align}
 \end{subequations}
-where pressure $p = p(x,t) = \rho_0\partial_t \Psi$ (N/m$^2$) and particle velocity $v = v(x,t) = -\partial_x\Psi$ (m/s) with air density $\rho_0$. Indeed it can be shown by substituting these definitions into Eq. \eqref{eq:contPressure}, Webster's equation is obtained again:
+where pressure $p = p(x,t)$ (N/m$^2$) and particle velocity $v = v(x,t)$ (m/s) are defined as follows:
+\begin{equation}
+    p = \rho_0\partial_t \Psi, \quad v = -\partial_x\Psi,
+\end{equation} 
+with air density $\rho_0$. Indeed it can be shown by substituting these definitions into Eq. \eqref{eq:contPressure}, Webster's equation is obtained again:
 \begin{equation}
   \nonumber
-        \frac{S}{\rho_0 c^2}\partial_t(\rho_0 \partial_t\psi) = -\partial_x(S(-\partial_x\Psi))\quad \Longrightarrow \quad S\partial_t^2\psi = c^2\partial_x(S\partial_x\Psi).
+        \frac{S}{\rho_0 c^2}\partial_t(\rho_0 \partial_t\Psi) = -\partial_x(S(-\partial_x\Psi))\quad \Longrightarrow \quad S\partial_t^2\Psi = c^2\partial_x(S\partial_x\Psi).
 \end{equation}
 \subsection{Discretisation}
 As done in \cite{Harrison2018}, it is useful to place either $p$ or $v$ on an interleaved grid; both in space and time. Following Harrison, we place $v$ on this interleaved grid. Accordingly, system \eqref{eq:firstOrderSystem} is discretised as
@@ -410,7 +414,7 @@ As done in \cite{Harrison2018}, it is useful to place either $p$ or $v$ on an in
 after which the update schemes become
 \begin{subequations}
     \begin{align}
-        p_l^{n+1} &= p_l^n - \frac{\rho_0 c \lambda}{\bar{S}_l}(S_{l+1/2}v_{l+1/2}^{n+1/2}-S_{l-1/2}v_{l-1/2}^{n-1/2}),\label{eq:pressureUpdate}\\
+        p_l^{n+1} &= p_l^n - \frac{\rho_0 c \lambda}{\bar{S}_l}(S_{l+1/2}v_{l+1/2}^{n+1/2}-S_{l-1/2}v_{l-1/2}^{n+1/2}),\label{eq:pressureUpdate}\\
         v_{l+1/2}^{n+1/2} &= v_{l+1/2}^{n-1/2}-\frac{\lambda}{\rho_0 c}(p_{l+1}^n - p_l^n),\label{eq:velocityUpdate}
     \end{align}
 \end{subequations}
@@ -425,7 +429,7 @@ In the first-order PDE case, the boundary conditions are defined as follows
 for all $n$.
 
 \subsection{Energy}
-For the energy analysis of the first-order system presented above, \cite{Harrison2018} is followed. Instead of taking an inner product with $\delta_{t\cdot}\Psi$ we take an inner product with $\mu_{t+}p$ instead. Using the primed inner product from Eq. \eqref{eq:primedInnerProduct}\footnote{We can use the primed rather than the weighted inner product here as the boundary conditions are defined as found in Section \ref{sec:boundariesFirstOrder}.} for Eq. \eqref{eq:discPressure} and after taking all terms to the left-hand side, this yields
+For the energy analysis of the first-order system presented above, \cite{Harrison2018} is followed. Instead of taking an inner product with $\delta_{t\cdot}\Psi$ we take an inner product with $\mu_{t+}p$. Using the primed inner product from Eq. \eqref{eq:primedInnerProduct}\footnote{We can use the primed rather than the weighted inner product here as the boundary conditions are defined as found in Section \ref{sec:boundariesFirstOrder}.} for Eq. \eqref{eq:discPressure} and after taking all terms to the left-hand side, this yields
 \begin{equation}\label{eq:firstOrderPrimed}
     \delta_{t+}\mathfrak{h} = \frac{1}{\rho_0 c^2}\langle \mu_{t+}p_l^n, \Sbar \delta_{t+}p_l^n \rangle_{\mathcal{D}}' +\langle \mu_{t+}p_l^n, \dxm(S_{l+1/2}v_{l+1/2}^{n+1/2})\rangle_{\mathcal{D}}'.
 \end{equation}
@@ -433,7 +437,7 @@ From now on, the following superscripts and subscripts will be assumed unless de
 \begin{align}\label{eq:discEnergyFirstOrder}
     \delta_{t+}\mathfrak{h} &= \frac{1}{\rho_0 c^2}\langle \mu_{t+}p, \bar S \delta_{t+}p \rangle_{\mathcal{D}}' -\langle \mu_{t+}\dxp p, Sv\rangle_{\underline{\mathcal{D}}} + \mathfrak{b} \quad \text{where}\\
     \mathfrak{b} &= \mathfrak{b}_\text{r} + \mathfrak{b}_\text{l}, \quad \text{with} \nonumber\\
-    \mathfrak{b}_\text{r} &= (\mu_{t+}p_N)\mu_{x+}(S_{N-1/2}v_{N-1/2})\quad \text{and}\\
+    \mathfrak{b}_\text{r} &= (\mu_{t+}p_N)\mu_{x+}(S_{N-1/2}v_{N-1/2})\quad \text{and}\label{eq:firstOrderRightBoundary}\\
     \mathfrak{b}_\text{l} &= -(\mu_{t+}p_0)\mu_{x-}(S_{1/2}v_{1/2})\label{eq:firstOrderLeftBoundary}.
 \end{align}
 Then, Eq. \eqref{eq:discVelocity} can be substituted into \eqref{eq:discEnergyFirstOrder} to get
@@ -453,10 +457,10 @@ to get
 \begin{equation}
     \begin{gathered}
         \mathfrak{h} = \mathfrak{t} + \mathfrak{v}\quad \text{where}\\
-       \mathfrak{t} = \frac{1}{2\rho_0 c^2}\left(\lVert\sqrt{\bar S }p\rVert'_\mathcal{D}\right)^2\quad \text{and} \quad \mathfrak{v} = \frac{\rho_0}{2}\langle Sv, e_{t-}v\rangle_{\underline{\mathcal{D}}}.
+       \mathfrak{t} = \frac{\rho_0}{2}\langle Sv, e_{t-}v\rangle_{\underline{\mathcal{D}}}\quad \text{and} \quad \mathfrak{v} = \frac{1}{2\rho_0 c^2}\left(\lVert\sqrt{\bar S }p\rVert'_\mathcal{D}\right)^2.
     \end{gathered}
 \end{equation}
-
+\SWcomment[At least, I think that the kinetic energy is the one with velocity, not pressure.]
 \subsection{Viscothermal Losses}
 Until now, only lossless tubes have been considered, but in reality, losses due to viscothermal effects occur. In frequency domain, the PDEs in \eqref{eq:firstOrderSystem} can be written as  
 \begin{subequations}\label{eq:firstOrderSystemFreq}
@@ -507,7 +511,7 @@ with displacement of the lip reed from equilibrium $y = y(t)$, mass of the lip r
 \begin{equation}
     \Delta p = P_\text{m} - p(0,t)
 \end{equation}
-is the difference between the pressure in the mouth $P_\text{m}$ (\SWcomment[kPa]) and the pressure in the mouth piece $p(t,0)$ (\SWcomment[kPa]). 
+is the difference between the pressure in the mouth $P_\text{m}$ (\SWcomment[kPa]) and the pressure in the mouth piece $p(0,t)$ (\SWcomment[kPa]). 
 \begin{figure}[ht]
     \centering
     \begin{tikzpicture}
@@ -667,11 +671,11 @@ This pressure difference causes a volume flow velocity following the Bernoulli e
 \begin{equation}
     U_\text{B} = w[y + H_0]_+\text{sgn}(\Delta p) \sqrt{\frac{2|\Delta p|}{\rho_0}},
 \end{equation}
-with effective lip-reed width $w$ (m), static equilibrium separation $H_0$ (m) and $[x]_+ = 0.5 (x + |x|)$ describes the ``positive part of`''. Notice that when $y + H_0 \leq 0$, the lips are closed and the volume velocity $U_\text{B}$ is 0. Another volume flow is generated by the lip reed itself according to
+with effective lip-reed width $w$ (m), static equilibrium separation $H_0$ (m) and $[x]_+ = 0.5 (x + |x|)$ describes the ``positive part of''. Notice that when $y + H_0 \leq 0$, the lips are closed and the volume velocity $U_\text{B}$ is 0. Another volume flow is generated by the lip reed itself according to
 \begin{equation}
     U_\text{r} = S_\text{r} \frac{dy}{dt}.
 \end{equation}
-Assuming that the volume flow velocity is conserved we define the total air volume entering the system is defined as
+Assuming that the volume flow velocity is conserved we define the total air volume entering the system as
 \begin{equation}
     S(0)v(0,t) = U_\text{B}(t) + U_\text{r}(t).
 \end{equation}
@@ -776,7 +780,7 @@ This we can then apply to the update of the lip reed in Eq. \eqref{eq:discReed}.
 
 \subsubsection{Coupling to the tube}
 To couple the reed to the tube, we take Eq. \eqref{eq:pressureUpdate} at $l=0$ and rewrite it to
-\begin{equation}
+\begin{equation}\label{eq:tubeCoupling}
     p^{n+1}_0 = p_0^n - \frac{\rho_0c\lambda}{\bar S_0}\left(-2\mu_{x-}(S_{1/2}v_{1/2}^{\nph}) + 2 S_{1/2}v_{1/2}^{\nph}\right),
 \end{equation}
 and substitute Eq. \eqref{eq:UbUr} to get
@@ -888,10 +892,71 @@ with
 \begin{equation}
     \mathfrak{h}_\text{c} = \frac{(\psi^n)^2}{2 }\nonumber
 \end{equation}
+\section{Radiation}
+\def\r{\text{r}}
+\def\one{{(1)}}
+Following \cite{Harrison2018} we can add a radiation to the schemes using a circuit representation of the Levine and Schwinger radiation model \SWcomment[(See Figure \textbackslash ref\{fig:radiation\})]. The system can be described as
+\begin{subequations}\label{eq:barVPSystem}
+    \begin{align}
+        \bar v &= \mu_{t+}v_\one + \frac{1}{R_2}\mu_{t+}p_\one + C_\r \delta_{t+}p_\one,\label{eq:barV}\\
+        \bar p &= L_\r \delta_{t+}v_\one,\label{eq:barP1}\\
+        \bar p &= \left(1+\frac{R_1}{R_2}\right)\mu_{t+}p_\one+ R_1 C_\r\delta_{t+}p_\one\label{eq:barP2},
+    \end{align}
+\end{subequations}
+where $\bar p^{n+1/2}$ and $\bar v^{n+1/2}$ lie on the interleaved temporal grid and are related to the tube by
+\begin{equation}\label{eq:barVars}
+    \bar p = \mu_{t+}p^n_N, \quad \bar S_N \bar v = \mu_{x-}\left(S_{N+1/2}v_{N+1/2}^{n+1/2}\right).
+\end{equation}
+We can couple this to the tube by taking Eq. \eqref{eq:pressureUpdate} at $l = N$
+\begin{equation}
+    p_N^{n+1} = p_N^n - \frac{\rho_0 c \lambda}{\bar{S}_N}\left(S_{N+1/2}v_{N+1/2}^{n+1/2}-S_{N-1/2}v_{N-1/2}^{n+1/2}\right),
+\end{equation}
+and, similarly to \eqref{eq:tubeCoupling}, rewriting this to 
+\begin{align}
+    p_N^{n+1} &= p_N^n - \frac{\rho_0 c \lambda}{\bar{S}_N}\left(2\mu_{x-}\left(S_{N+1/2}v_{N+1/2}^{n+1/2}\right)-2S_{N-1/2}v_{N-1/2}^{n+1/2}\right)\nonumber,\\
+    p_N^{n+1} &= p_N^n - \frac{2\rho_0 c \lambda}{\bar{S}_N}\left(\bar S_N \bar v-S_{N-1/2}v_{N-1/2}^{n+1/2}\right)\label{eq:preSolutP}.
+\end{align}
+We can then find a definition for $\bar v$ by expanding system \eqref{eq:barVPSystem} and make Eq. \eqref{eq:barV} solely dependent on known values of $v_\one$, $p_\one$ and $p_N^n$ and the unknown $p_N^{n+1}$ (as we can solve for the latter using \eqref{eq:preSolutP}).
 
+\begin{equation}\label{eq:vBarExpanded}
+    \bar v = \frac{1}{2}\left(v_\one^{n+1} + v_\one^n\right) + \left(\frac{1}{2R_2} + \frac{C_\r}{k}\right) p_\one^{n+1} +\left(\frac{1}{2R_2} - \frac{C_\r}{k}\right)p_\one^n
+\end{equation}
+where, after expanding Eq. \eqref{eq:barP1}
+\begin{equation}
+    v_\one^{n+1} = \frac{k}{L_\r}\bar p + v_\one^n ,
+\end{equation}
+and Eq. \eqref{eq:barP2}
+\begin{align}
+    \bar p &= \left(1+\frac{R_1}{R_2}\right)\mu_{t+}p_\one+ R_1 C_\r\delta_{t+}p_\one\nonumber\\
+    \bar p &= \frac{1}{2}\left(1+\frac{R_1}{R_2}\right)\left(p_\one^{n+1} + p_\one^n\right) + \frac{R_1C_\r}{k}\left(p_\one^{n+1} - p_\one^n\right)\nonumber\\
+    \left(\frac{1}{2}+\frac{R_1}{2R_2} + \frac{R_1C_\r}{k}\right)p_\one^{n+1} &= \bar p + \left(\frac{R_1C_\r}{k} - \frac{1}{2} - \frac{R_1}{2R_2}\right)p_\one^n\nonumber\\
+    p_\one^{n+1} &= \underbrace{\left(\frac{2R_2k}{2R_1R_2C_\r + k(R_1 + R_2)}\right)}_{\zeta_1}\bar p + \underbrace{\left(\frac{2R_1R_2C_\r - k(R_1 + R_2)}{2R_1R_2C_\r + k(R_1 + R_2)}\right)}_{\zeta_2} p_\one^n .
+\end{align}
+Filling these into Eq. \eqref{eq:vBarExpanded} and using the definition of $\bar p$ from Eq. \eqref{eq:barVars} yields
+\begin{align}
+    \bar v &= \frac{1}{2}\left(\frac{k}{L_\r}(\mu_{t+}p_N^n) + 2v_\one^n\right)+\left(\frac{1}{2R_2} + \frac{C_\r}{k}\right)\zeta_1\mu_{t+}p_N^n + \left(\frac{1}{2R_2} + \frac{C_\r}{k}\right)\zeta_2p_\one^n + \left(\frac{1}{2R_2} - \frac{C_\r}{k}\right)p_\one^n\nonumber\\
+    \bar v &= \underbrace{\left(\frac{k}{2L_\r} + \frac{\zeta_1}{2R_2}+\frac{C_\r\zeta_1}{k}\right)}_{\zeta_3}\mu_{t+}p_N^n + v_\one^n + \underbrace{\left(\frac{\zeta_2+1}{2R_2} + \frac{C_\r\zeta_2 - C_\r}{k}\right)}_{\zeta_4}p_\one^n.
+\end{align}
+Finally, filling in this definition for $\bar v$ into Eq. \eqref{eq:preSolutP}
+\begin{align}
+    p_N^{n+1} &= p_N^n - \frac{2\rho_0c\lambda}{\bar S_N}\left(\bar S_N
+    \left[\zeta_3\left(\frac{p_N^{n+1} + p_N^n}{2}\right) + v_\one^n + \zeta_4p_\one^n\right] - S_{N-1/2}v_{N-1/2}^{n+1/2}\right)\nonumber\\
+    p_N^{n+1} &= p_N^n - \rho_0c\lambda\left(\zeta_3(p_N^{n+1} + p_N^n) + 2(v_\one^n + \zeta_4p_\one^n)-\frac{2S_{N-1/2}v_{N-1/2}^{n+1/2}}{\bar S_N}\right)\nonumber\\
+    (1+\rho_0c\lambda\zeta_3)p_N^{n+1} &= (1 - \rho_0c\lambda\zeta_3)p_N^n - 2\rho_0c\lambda \left( v_\one^n+\zeta_4p_\one^n - \frac{S_{N-1/2}v_{N-1/2}^{n+1/2}}{\bar S_N}\right)
+\end{align}
+\subsection{Energy}
+Recalling the condition at the right boundary from \eqref{eq:firstOrderRightBoundary}
+\begin{equation}
+    \mathfrak{b}_\r = (\mu_{t+}p_N)\underbrace{\mu_{x+}(S_{N-1/2}v_{N-1/2})}_{\mu_{x-}S_{N+1/2}v_{N+1/2}},
+\end{equation}
+using Eq. \eqref{eq:barVars} we can rewrite this to
+\begin{equation}
+    \mathfrak{b}_\r = \bar p\bar S_N\bar v.
+\end{equation}
+then we can 
 \section{Implementation}
 The order of calculation then becomes:
-\begin{algorithm}[ht]
+\begin{algorithm}[h]
 \centering
 \fbox{\parbox{0.9\linewidth}{
 \setstretch{1.5}
